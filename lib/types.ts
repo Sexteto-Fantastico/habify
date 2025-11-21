@@ -3,22 +3,23 @@ export type HabitFrequency = "daily" | "weekly" | "monthly";
 export interface User {
   id: number;
   name: string;
+  avatar: string;
   email: string;
-  createdAt: string;
+  createdAt: Date;
 }
 
 export interface Tag {
   id: number;
   name: string;
   color: string;
-  createdAt: string;
+  createdAt: Date;
 }
 
 export interface Habit {
   id: number;
   name: string;
   description?: string;
-  createdAt: string;
+  createdAt: Date;
   frequency: HabitFrequency;
   tags: Tag[];
   completions: HabitCompletion[];
@@ -27,7 +28,7 @@ export interface Habit {
 export interface HabitCompletion {
   id: number;
   habitId: number;
-  date: string;
+  date: Date;
   completed: boolean;
 }
 

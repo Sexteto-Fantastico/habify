@@ -1,6 +1,6 @@
 import { HabitFrequency } from "@/lib/types";
 
-export const FREQUENCY_LABELS: Record<HabitFrequency, string> = {
+export const FrequencyLabel: Record<HabitFrequency, string> = {
   daily: "Diário",
   weekly: "Semanal",
   monthly: "Mensal",

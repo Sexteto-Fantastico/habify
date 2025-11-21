@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
-import { FREQUENCY_LABELS } from "@/constants/frequency-labels";
+import { FrequencyLabel } from "@/constants/frequency-labels";
 import { HabitFrequency, Tag } from "@/lib/types";
 import { View, Pressable } from "react-native";
 
@@ -71,7 +71,7 @@ export function StatsFilters({
                   }
                   className="flex-1"
                 >
-                  <Text>{FREQUENCY_LABELS[freq]}</Text>
+                  <Text>{FrequencyLabel[freq]}</Text>
                 </Button>
               ),
             )}

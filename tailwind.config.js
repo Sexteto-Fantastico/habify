@@ -172,14 +172,9 @@ module.exports = {
         },
       },
       fontFamily: {
-        heading: undefined,
-        body: undefined,
+        heading: ["var(--font-inter)"],
+        body: ["var(--font-inter)"],
         mono: undefined,
-        jakarta: ["var(--font-plus-jakarta-sans)"],
-        roboto: ["var(--font-roboto)"],
-        code: ["var(--font-source-code-pro)"],
-        inter: ["var(--font-inter)"],
-        "space-mono": ["var(--font-space-mono)"],
       },
       fontWeight: {
         extrablack: "950",

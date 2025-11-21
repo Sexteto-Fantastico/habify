@@ -5,7 +5,7 @@ import { Habit } from "@/lib/types";
 import { CalendarIcon, TagIcon } from "lucide-react-native";
 import { Text } from "@/components/ui/text";
 import { View } from "react-native";
-import { FREQUENCY_LABELS } from "@/constants/frequency-labels";
+import { FrequencyLabel } from "@/constants/frequency-labels";
 
 interface HabitDetailCardProps {
   habit: Habit;
@@ -33,7 +33,7 @@ export function HabitDetailCard({
       <View className="gap-3">
         <View className="flex-row items-center gap-2">
           <Icon as={CalendarIcon} />
-          <Text size="sm">{FREQUENCY_LABELS[habit.frequency]}</Text>
+          <Text size="sm">{FrequencyLabel[habit.frequency]}</Text>
         </View>
 
         {habit.tags && habit.tags.length > 0 && (

@@ -1,14 +1,35 @@
 import * as React from "react";
 import { Card } from "@/components/ui/card";
-import { Text } from "@/components/ui/text";
 import { HabitCard } from "@/components/habits/HabitCard";
 import { Habit } from "@/lib/types";
 import { View, ScrollView, Alert } from "react-native";
-import { getAllHabits, markHabitCompletion } from "@/api/habit";
+import { markHabitCompletion } from "@/api/habit";
 import { Button, ButtonText } from "@/components/ui/button";
+import { Text } from "@/components/ui/text";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Heading } from "@/components/ui/heading";
+
+const initialHabits: Habit[] = [
+  {
+    id: 1,
+    name: "Beber Água",
+    description: "Beber 8 copos de água por dia",
+    frequency: "daily",
+    completions: [],
+    tags: [
+      {
+        id: 1,
+        name: "Saúde",
+        color: "blue",
+        createdAt: new Date(),
+      },
+    ],
+    createdAt: new Date(),
+  },
+];
 
 export default function HomeScreen() {
-  const [habits, setHabits] = React.useState<Habit[]>([]);
+  const [habits, setHabits] = React.useState<Habit[]>(initialHabits);
 
   React.useEffect(() => {
     loadHabits();
@@ -16,8 +37,8 @@ export default function HomeScreen() {
 
   const loadHabits = async () => {
     try {
-      const habits = await getAllHabits();
-      setHabits(habits);
+      //const habits = await getAllHabits();
+      //setHabits(habits);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
       Alert.alert("Erro", "Não foi possível carregar os dados");
@@ -39,16 +60,15 @@ export default function HomeScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-background">
-      <View className="gap-4 p-4">
+    <SafeAreaView className="flex-1 bg-background-100">
+      <ScrollView className="gap-4 p-4">
         <View>
           <View className="mb-4 gap-1">
-            <Text size="3xl">Olá, {"Pedro"}! 👋</Text>
-            <Text className="text-background-muted">
+            <Heading size="2xl">Olá, {"Pedro"}!</Heading>
+            <Text className="text-typography-500">
               Bora criar bons hábitos juntos!
             </Text>
           </View>
-          <View></View>
         </View>
         <View className="gap-3">
           <View className="mb-2 flex flex-row items-center justify-between">
@@ -76,7 +96,7 @@ export default function HomeScreen() {
             ))
           )}
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

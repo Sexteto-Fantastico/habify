@@ -11,7 +11,7 @@ import { View, ScrollView, Alert } from "react-native";
 import { getAllHabits, getHabitCompletions } from "@/api/habit";
 import { getHabitStats } from "@/api/stat";
 import { getAllTags } from "@/api/tag";
-import { FREQUENCY_LABELS } from "@/constants/frequency-labels";
+import { FrequencyLabel } from "@/constants/frequency-labels";
 import { StatsFilters } from "@/components/stats/StatsFilters";
 import { StatsCard } from "@/components/stats/StatsCard";
 
@@ -112,7 +112,7 @@ export default function StatsScreen() {
   const getFilterDescription = () => {
     const parts: string[] = [];
     if (filters.frequency)
-      parts.push(`Filtrado por: ${FREQUENCY_LABELS[filters.frequency]}`);
+      parts.push(`Filtrado por: ${FrequencyLabel[filters.frequency]}`);
     if (filters.startDate && filters.endDate)
       parts.push(`${filters.startDate} a ${filters.endDate}`);
     if (filters.tags && filters.tags.length > 0)
