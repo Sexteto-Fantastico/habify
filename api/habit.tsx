@@ -1,16 +1,31 @@
 import { HabitFrequency, Habit, HabitCompletion, Tag } from "@/lib/types";
+import api from "@/api/config/axios";
 
 export async function createHabit(
   name: string,
   description: string,
   frequency: HabitFrequency,
-  tagIds: number[] = [],
+  tags: string[] = [],
 ): Promise<number> {
   return 1;
 }
 
 export async function getAllHabits(): Promise<Habit[]> {
-  return [];
+  const response = await api.get("/habits/all");
+  var responseMapped = response.data.map((habit: any) => ({
+    id: habit.id,
+    name: habit.name,
+    description: habit.description,
+    frequency: habit.frequency,
+    createdAt: new Date(habit.createdAt),
+    tags: (habit.tags ?? []).map((tag: any) => ({
+      ...tag,
+      color: tag.color ?? "blue",
+    })),
+    completions: habit.completions ?? [],
+  }));
+ 
+  return responseMapped;
 }
 
 export async function getHabitById(id: number): Promise<Habit | null> {
@@ -22,7 +37,7 @@ export async function updateHabit(
   name: string,
   description: string,
   frequency: HabitFrequency,
-  tagIds: number[] = [],
+  tags: number[] = [],
 ): Promise<void> {}
 
 export async function deleteHabit(id: number): Promise<void> {}
