@@ -2,10 +2,11 @@ import { Card } from "@/components/ui/card";
 import { Icon } from "@/components/ui/icon";
 import { TagBadge } from "@/components/tags/TagBadge";
 import { Habit } from "@/lib/types";
-import { CheckIcon } from "lucide-react-native";
+import { CheckIcon, ClockIcon } from "lucide-react-native";
 import { View } from "react-native";
 import { Button } from "../ui/button";
 import { Text } from "../ui/text";
+import { formatDate } from "@/lib/utils";
 
 interface HabitCardProps {
   habit: Habit;
@@ -19,7 +20,14 @@ export function HabitCard({ habit, onToggleCompletion }: HabitCardProps) {
         <View className="flex-1 flex-col gap-2">
           <Text size="lg">{habit.name}</Text>
           {habit.description && <Text className="">{habit.description}</Text>}
+          {habit.createdAt && (
+            <View className="flex-row items-center gap-1">
+              <Icon as={ClockIcon} size="sm" className="text-gray-400" />
+              <Text className="text-xs text-gray-400">{formatDate(habit.createdAt)}</Text>
+            </View>
+          )}
         </View>
+
         <Button
           variant="outline"
           size="sm"
