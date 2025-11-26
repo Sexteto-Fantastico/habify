@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { Input, InputField } from "@/components/ui/input";
 import { TagSelector } from "@/components/tags/TagSelector";
 import { HabitFrequency, Tag } from "@/lib/types";
 import { Text } from "@/components/ui/text";
@@ -21,6 +22,12 @@ interface HabitFormProps {
   tags: Tag[];
 }
 
+const FREQUENCY_LABELS: Record<HabitFrequency, string> = {
+  daily: "Diário",
+  weekly: "Semanal",
+  monthly: "Mensal",
+};
+
 export function HabitForm({
   formData,
   onChange,
@@ -32,27 +39,35 @@ export function HabitForm({
   return (
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
       <View className="gap-4">
+
         <View className="gap-2">
           <Text>Nome *</Text>
-          {/* <Input
-            placeholder="Ex: Exercitar-se"
-            value={formData.name}
-            onChangeText={(text) => onChange({ ...formData, name: text })}
-          /> */}
+          <Input>
+            <InputField
+              placeholder="Leitura"
+              value={formData.name}
+              onChangeText={(text) =>
+                onChange({ ...formData, name: text })
+              }
+            />
+          </Input>
         </View>
+
         <View className="gap-2">
           <Text>Descrição</Text>
-          {/* <Input
-            id="description"
-            placeholder="Descreva seu hábito"
-            value={formData.description}
-            onChangeText={(text) =>
-              onChange({ ...formData, description: text })
-            }
-            multiline
-            numberOfLines={3}
-          /> */}
+          <Input>
+            <InputField
+              placeholder="Descreva seu hábito"
+              value={formData.description}
+              onChangeText={(text) =>
+                onChange({ ...formData, description: text })
+              }
+              multiline
+              numberOfLines={3}
+            />
+          </Input>
         </View>
+
         <View className="gap-2">
           <Text size="sm">Frequência</Text>
           <View className="flex-row gap-2">
@@ -66,10 +81,11 @@ export function HabitForm({
                 >
                   <Text>{FREQUENCY_LABELS[freq]}</Text>
                 </Button>
-              ),
+              )
             )}
           </View>
         </View>
+
         <TagSelector
           tags={tags}
           selectedTagIds={formData.selectedTagIds}
@@ -80,6 +96,7 @@ export function HabitForm({
             onChange({ ...formData, selectedTagIds: newSelectedIds });
           }}
         />
+
         <View className="flex-row gap-2 pb-4">
           <Button variant="outline" onPress={onCancel} className="flex-1">
             <Text>Cancelar</Text>
@@ -88,6 +105,7 @@ export function HabitForm({
             <Text>{submitLabel}</Text>
           </Button>
         </View>
+
       </View>
     </ScrollView>
   );
