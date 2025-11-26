@@ -25,4 +25,14 @@ export const Colors = {
   },
 };
 
-export const TAGS_COLORS = [""];
+export const TAGS_COLORS = [
+  "#FF6B6B", // Red
+  "#FFD93D", // Yellow
+  "#6BCB77", // Green
+  "#4D96FF", // Blue
+  "#A66CFF", // Purple
+  "#FF922B", // Orange
+  "#38A3A5", // Teal
+  "#F7B801", // Gold
+  "#B983FF", // Lavender
+];

@@ -24,7 +24,7 @@ export function TagSelector({
         <Text className="text-center">Nenhuma tag disponível</Text>
         <Text
           className="text-center text-sm text-primary underline"
-          onPress={() => router.push("/tags")}
+          onPress={() => router.push("/(tabs)/tags")}
         >
           Crie sua primeira tag
         </Text>
