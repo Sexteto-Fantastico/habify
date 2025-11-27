@@ -15,6 +15,7 @@ import {
 export default function TabsLayout() {
   return (
     <Tabs
+      screenOptions={{ headerShown: false }}
       tabBar={({ state, descriptors, navigation }) => (
         <ViewNative
           style={{
@@ -69,7 +70,10 @@ export default function TabsLayout() {
       )}
     >
       <Tabs.Screen name="home" options={{ tabBarIcon: HomeIcon }} />
-      <Tabs.Screen name="list-habits" options={{ tabBarIcon: ListIcon, title: "Meus hábitos" }} />
+      <Tabs.Screen
+        name="list-habits"
+        options={{ tabBarIcon: ListIcon, title: "Meus hábitos" }}
+      />
       <Tabs.Screen name="create-habit" options={{ tabBarIcon: PlusIcon }} />
       <Tabs.Screen name="stats" options={{ tabBarIcon: ChartColumnIcon }} />
       <Tabs.Screen name="profile" options={{ tabBarIcon: UserRoundIcon }} />

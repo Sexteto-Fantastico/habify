@@ -1,46 +1,77 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import axios, {
+  AxiosInstance,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+  AxiosError
+} from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as NavigationService from "@/app/auth/navigation";
 
-// Todo: colocar em um env
-const API_BASE_URL = 'http://localhost:3001/api'; 
+const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:3001/api";
 
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000, // 10s
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
-// Interceptor de Requisição (adiciona o token de autenticação, por exemplo)
 api.interceptors.request.use(
-  async (config) => {
-    // Todo: Obter token do AsyncStorage ou outro storage
-    // const token = await AsyncStorage.getItem('userToken');
-    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc2Mzg0MTE0OCwiZXhwIjoxNzY2NDMzMTQ4fQ.aaeRJmQS7Ym01BjyfkUaTwFyd7S52lLufrNrmYFp5pE'; // Substitua pela lógica real
+  async (config: InternalAxiosRequestConfig) => {
+    try {
+      const token = await AsyncStorage.getItem("@user_token");
 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-      //config.withCredentials = true;
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch (error) {
+      console.error("Erro ao recuperar token:", error);
     }
     return config;
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 api.interceptors.response.use(
   (response: AxiosResponse) => {
     return response;
   },
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      console.log('Sessão expirada. Redirecionando para o login...');
-      // Todo: Lógica para deslogar o usuário e redirecionar
+  async (error: AxiosError) => {
+    let txtMensagem = "Ocorreu um erro inesperado. Tente novamente mais tarde.";
+
+    if (error.response) {
+      const { data, status } = error.response;
+
+      if (data && typeof data === 'object') {
+        if ('error' in data) {
+            txtMensagem = (data as any).error;
+        } else if ('message' in data) {
+            txtMensagem = (data as any).message;
+        }
+      } else if (typeof data === 'string') {
+        txtMensagem = data;
+      }
+
+      if (status === 401) {
+        try {
+          await AsyncStorage.multiRemove(["@user_token", "@user_data"]);
+          
+          NavigationService.resetToLogin();
+          
+          return Promise.reject(new Error("Sessão expirada"));
+        } catch (logoutError) {
+          console.log("Erro ao limpar dados de sessão", logoutError);
+        }
+      }
+    } else if (error.request) {
+      txtMensagem = "Falha na conexão com o servidor. Verifique sua internet.";
     }
-    
-    return Promise.reject(error);
-  }
+
+    return Promise.reject(new Error(txtMensagem));
+  },
 );
 
 export default api;
