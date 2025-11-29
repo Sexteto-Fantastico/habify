@@ -15,7 +15,7 @@ export async function register(name: string, email: string, password: string): P
 }
 
 export async function login(email: string, password: string): Promise<LoginData> {
-  const response = await api.post(`${BASE_URL}/login`, { email, password });
+  const response = await api.post(`${BASE_URL}/login`, { email, password, rememberMe: true });
   return response.data;
 }
 
