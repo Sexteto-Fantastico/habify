@@ -103,7 +103,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background-100">
-      <ScrollView className="gap-4 p-4">
+      <ScrollView className="pb-32 gap-4 p-4">
         <View>
           <View className="mb-4 gap-1">
             <Heading size="2xl">Olá, {"Fulano"}!</Heading>

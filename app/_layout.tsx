@@ -16,7 +16,6 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
-import { SafeAreaView } from "@/components/ui/safe-area-view";
 
 SplashScreen.preventAutoHideAsync();
 

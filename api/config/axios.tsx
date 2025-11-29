@@ -20,10 +20,11 @@ const api: AxiosInstance = axios.create({
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
-      const token = await AsyncStorage.getItem("@user_token");
-
+      const token = await AsyncStorage.getItem("@auth_token");
+      console.log("token aquii", token)
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
+        console.log("enviando token no header");
       }
     } catch (error) {
       console.error("Erro ao recuperar token:", error);
