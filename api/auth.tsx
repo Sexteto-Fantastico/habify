@@ -19,7 +19,7 @@ export async function login(email: string, password: string): Promise<LoginData>
   return response.data;
 }
 
-export async function google(token: string): Promise<LoginData> {
+export async function loginWithGoogle(token: string): Promise<LoginData> {
   const response = await api.post(`${BASE_URL}/google`, { token });
   return response.data;
 }
