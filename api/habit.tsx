@@ -12,6 +12,7 @@ export async function createHabit(
 
 export async function getAllHabits(): Promise<Habit[]> {
   const response = await api.get("/habits/all");
+  console.log(response.data);
   var responseMapped = response.data.map((habit: any) => ({
     id: habit.id,
     name: habit.name,
