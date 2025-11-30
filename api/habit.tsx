@@ -29,9 +29,8 @@ export async function getAllHabits(): Promise<Habit[]> {
   return responseMapped;
 }
 
-export async function getHabits(habitFilter: HabitFilter = {}): Promise<Habit[]> {
-  console.log("habitFilter", habitFilter);
-  const response = await api.get("/habits", {params: habitFilter});
+export async function getHabits(habitFilter: HabitFilter): Promise<Habit[]> {
+  const response = await api.get(`/habits/${habitFilter.createdDate.toISOString().split("T")[0]}`);
   return response.data;
 }
 
@@ -45,15 +44,20 @@ export async function updateHabit(
   description: string,
   frequency: HabitFrequency,
   tags: number[] = [],
-): Promise<void> {}
+): Promise<void> {
+
+}
 
 export async function deleteHabit(id: number): Promise<void> {}
 
 export async function markHabitCompletion(
   habitId: number,
-  date: string,
+  date?: string,
   completed: boolean,
-): Promise<void> {}
+): Promise<void> {
+  const response = await api.post(`/habits/${habitId}/complete`, {date: date});
+
+}
 
 export async function getHabitCompletions(
   habitId: number,

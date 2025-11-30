@@ -40,5 +40,5 @@ export interface HabitStats {
 }
 
 export interface HabitFilter{
-  createdDate?: Date;
+  createdDate: Date;
 }

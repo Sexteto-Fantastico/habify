@@ -8,6 +8,7 @@ import { Text } from "@/components/ui/text";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Heading } from "@/components/ui/heading";
 import WeekCalendar from "@/components/calendar/WeekCalendar";
+import StatsProgressionDay from "@/components/stats/StatsProgressionDay";
 
 const initialHabits: Habit[] = [
   {
@@ -48,16 +49,11 @@ export default function HomeScreen() {
   const [habits, setHabits] = React.useState<Habit[]>([]);
   const [selectedDate, setSelectedDate] = React.useState(new Date());
 
-  console.log("habits:", habits);
   React.useEffect(() => {
     loadHabits();
   }, []);
 
   React.useEffect(() => {
-    async function loadFilteredHabits(){
-      const habitsFiltered = await getHabits({ createdDate: selectedDate});
-      setHabits(habitsFiltered);
-    }
     loadFilteredHabits();
   }, [selectedDate]);
 
@@ -71,6 +67,15 @@ export default function HomeScreen() {
     }
   };
 
+  const loadFilteredHabits = async () => {
+    try {
+      const habitsFiltered = await getHabits({ createdDate: selectedDate});
+      setHabits(habitsFiltered);
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+    }
+  }
+
   const handleToggleCompletion = async (habitId: number) => {
     try {
       await markHabitCompletion(
@@ -78,7 +83,7 @@ export default function HomeScreen() {
         new Date().toISOString().split("T")[0],
         true,
       );
-      await loadHabits();
+      await loadFilteredHabits();
     } catch (error) {
       console.error("Erro ao marcar conclusão do hábito:", error);
       Alert.alert("Erro", "Não foi possível marcar a conclusão do hábito");
@@ -87,27 +92,7 @@ export default function HomeScreen() {
 
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
-    console.log("Data selecionada:", date.toISOString().split("T")[0]);
   };
-
-  // Função auxiliar para verificar se um hábito foi completado na data selecionada
-  const isHabitCompletedForDate = (habit: Habit, targetDate: Date): boolean => {
-    const targetDateString = targetDate.toISOString().split("T")[0];
-
-    const completion = habit.completions.find((comp) => {
-      const compDateString = new Date(comp.date).toISOString().split("T")[0];
-      return compDateString === targetDateString && comp.completed;
-    });
-
-    return !!completion;
-  };
-
-  const completedHabits: number = habits.filter((habit) =>
-    isHabitCompletedForDate(habit, selectedDate),
-  ).length;
-  const totalHabits: number = habits.length;
-  const progress: number =
-    totalHabits > 0 ? (completedHabits / totalHabits) * 100 : 0;
 
   return (
     <SafeAreaView className="flex-1 bg-background-100">
@@ -134,29 +119,7 @@ export default function HomeScreen() {
           />
         </View>
         {/* Progresso do Dia */}
-        <Card className="m-1">
-          <View className="flex-row justify-between items-center mb-2">
-            <Text className="font-semibold" size="2xl">
-              Progresso do Dia
-            </Text>
-            <Text className="text-gray-600">
-              {completedHabits}/{totalHabits}
-            </Text>
-          </View>
-
-          <View className="w-full bg-gray-200 rounded-full h-3">
-            <View
-              className="bg-green-500 h-3 rounded-full"
-              style={{ width: `${progress}%` }}
-            />
-          </View>
-
-          <Text className="text-green-500 text-sm mt-2 font-medium">
-            {progress === 100
-              ? "Todos os hábitos concluídos! 🎉"
-              : `${Math.round(progress)}% concluído`}
-          </Text>
-        </Card>
+        <StatsProgressionDay habits={habits} selectedDate={selectedDate} />
 
         <Card className="m-1">
           <View className="flex-row justify-between items-center mb-4">
