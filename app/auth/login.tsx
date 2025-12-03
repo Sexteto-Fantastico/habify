@@ -16,11 +16,12 @@ import { VStack } from "@/components/ui/vstack";
 import { Box } from "@/components/ui/box";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { login } from "@/api/auth";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Login() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const { signIn } = useAuth();
   
   const fadeHeader = useRef(new Animated.Value(0)).current;
   const slideHeader = useRef(new Animated.Value(20)).current;
@@ -89,8 +90,12 @@ export default function Login() {
     try {
       const data = await login(formData.email, formData.password);
 
-      await AsyncStorage.setItem("@auth_token", data.token);
-      await AsyncStorage.setItem("@user_data", JSON.stringify(data));
+      await signIn({
+        id: data.userId,
+        name: data.name,
+        token: data.token,
+        avatar: data.avatar,
+      });
       console.log("LOGIN - Dados salvos no storage com sucesso.");
 
       router.replace("/home");

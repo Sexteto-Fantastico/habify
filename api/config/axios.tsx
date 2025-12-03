@@ -6,8 +6,17 @@ import axios, {
 } from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as NavigationService from "@/app/auth/navigation";
+import { STORAGE_KEY } from "@/constants/auth";
+import Constants from "expo-constants";
 
-const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:3001/api";
+const debuggerHost = Constants.expoConfig?.hostUri;
+const localhost = debuggerHost?.split(":")[0];
+
+if (!localhost) {
+  throw new Error("Localhost IP não encontrado. Verifique se está rodando no Expo Go.");
+}
+
+const API_BASE_URL = `http://${localhost}:3001/api`;
 
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -20,14 +29,20 @@ const api: AxiosInstance = axios.create({
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
-      const token = await AsyncStorage.getItem("@auth_token");
-      console.log("token aquii", token)
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
-        console.log("enviando token no header");
+      const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
+      
+      if (jsonValue && config.headers) {
+        const userData = JSON.parse(jsonValue);
+        
+        const token = userData?.token; 
+
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+          console.log("Token anexado ao header com sucesso"); 
+        }
       }
     } catch (error) {
-      console.error("Erro ao recuperar token:", error);
+      console.error("Erro ao recuperar token no interceptor:", error);
     }
     return config;
   },
@@ -48,9 +63,9 @@ api.interceptors.response.use(
 
       if (data && typeof data === 'object') {
         if ('error' in data) {
-            txtMensagem = (data as any).error;
+          txtMensagem = (data as any).error;
         } else if ('message' in data) {
-            txtMensagem = (data as any).message;
+          txtMensagem = (data as any).message;
         }
       } else if (typeof data === 'string') {
         txtMensagem = data;
@@ -58,11 +73,10 @@ api.interceptors.response.use(
 
       if (status === 401) {
         try {
-          await AsyncStorage.multiRemove(["@user_token", "@user_data"]);
-          
+          await AsyncStorage.removeItem(STORAGE_KEY);
           NavigationService.resetToLogin();
           
-          return Promise.reject(new Error("Sessão expirada"));
+          return Promise.reject(new Error("Sessão expirada. Faça login novamente."));
         } catch (logoutError) {
           console.log("Erro ao limpar dados de sessão", logoutError);
         }
