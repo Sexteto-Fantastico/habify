@@ -38,3 +38,7 @@ export interface HabitStats {
   pending: number;
   notCompleted: number;
 }
+
+export interface HabitFilter{
+  createdDate: Date;
+}

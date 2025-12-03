@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { View, TouchableOpacity, ScrollView } from "react-native";
 import { Motion } from "@legendapp/motion";
 import { ArrowLeft, ArrowRight } from "lucide-react-native";
+import { Card } from "../ui/card";
+import { Text } from "@/components/ui/text";
 
 interface Day {
   date: Date;
@@ -33,7 +35,9 @@ const WeekCalendar = ({ selectedDate, onDateSelect }: WeekCalendarProps) => {
       week.push({
         date: currentDate,
         dayOfMonth: currentDate.getDate(),
-        dayOfWeek: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][currentDate.getDay()],
+        dayOfWeek: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"][
+          currentDate.getDay()
+        ],
         isToday: isToday(currentDate),
         isSelected: isSameDay(currentDate, selectedDate),
       });
@@ -69,14 +73,16 @@ const WeekCalendar = ({ selectedDate, onDateSelect }: WeekCalendarProps) => {
   };
 
   return (
-    <View className="bg-white rounded-2xl p-4 mx-4 shadow-lg">
+    <Card className="m-1">
       <View className="flex-row justify-between items-center mb-4">
-
-        <TouchableOpacity className="w-8 h-8 items-center justify-center bg-gray-100 rounded-full active:bg-gray-200" onPress={() => navigateWeek("prev")}>
-          <ArrowLeft className="text-blue-500"/>
+        <TouchableOpacity
+          className="w-8 h-8 items-center justify-center bg-gray-100 rounded-full active:bg-gray-200"
+          onPress={() => navigateWeek("prev")}
+        >
+          <ArrowLeft className="text-blue-500" />
         </TouchableOpacity>
 
-        <Text className="text-gray-800 font-semibold text-lg">
+        <Text size="2xl">
           {selectedDate.toLocaleDateString("pt-BR", {
             month: "long",
             year: "numeric",
@@ -84,7 +90,7 @@ const WeekCalendar = ({ selectedDate, onDateSelect }: WeekCalendarProps) => {
         </Text>
 
         <TouchableOpacity onPress={() => navigateWeek("next")}>
-          <ArrowRight className="text-blue-500"/>
+          <ArrowRight className="text-blue-500" />
         </TouchableOpacity>
       </View>
 
@@ -93,7 +99,7 @@ const WeekCalendar = ({ selectedDate, onDateSelect }: WeekCalendarProps) => {
           <Motion.View
             key={index}
             className={`flex-1 mx-1 items-center py-3 rounded-xl ${
-              day.isSelected ? 'bg-blue-500' : 'bg-gray-100'
+              day.isSelected ? "bg-blue-500" : "bg-gray-100"
             }`}
             whileTap={{ scale: 0.95 }}
           >
@@ -103,7 +109,7 @@ const WeekCalendar = ({ selectedDate, onDateSelect }: WeekCalendarProps) => {
             >
               <Text
                 className={`text-xs font-medium ${
-                  day.isSelected ? 'text-white' : 'text-gray-600'
+                  day.isSelected ? "text-white" : "text-gray-600"
                 }`}
               >
                 {day.dayOfWeek}
@@ -111,10 +117,10 @@ const WeekCalendar = ({ selectedDate, onDateSelect }: WeekCalendarProps) => {
               <Text
                 className={`text-base font-bold mt-1 ${
                   day.isSelected
-                    ? 'text-white'
+                    ? "text-white"
                     : day.isToday
-                      ? 'text-blue-500'
-                      : 'text-gray-800'
+                      ? "text-blue-500"
+                      : "text-gray-800"
                 }`}
               >
                 {day.dayOfMonth}
@@ -126,7 +132,7 @@ const WeekCalendar = ({ selectedDate, onDateSelect }: WeekCalendarProps) => {
           </Motion.View>
         ))}
       </View>
-    </View>
+    </Card>
   );
 };
 

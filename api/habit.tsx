@@ -1,4 +1,4 @@
-import { HabitFrequency, Habit, HabitCompletion, Tag } from "@/lib/types";
+import { HabitFrequency, Habit, HabitCompletion, Tag, HabitFilter } from "@/lib/types";
 import api from "@/api/config/axios";
 
 export async function createHabit(
@@ -29,6 +29,11 @@ export async function getAllHabits(): Promise<Habit[]> {
   return responseMapped;
 }
 
+export async function getHabits(habitFilter: HabitFilter): Promise<Habit[]> {
+  const response = await api.get(`/habits/${habitFilter.createdDate.toISOString().split("T")[0]}`);
+  return response.data;
+}
+
 export async function getHabitById(id: number): Promise<Habit | null> {
   return null;
 }
@@ -39,15 +44,20 @@ export async function updateHabit(
   description: string,
   frequency: HabitFrequency,
   tags: number[] = [],
-): Promise<void> {}
+): Promise<void> {
+
+}
 
 export async function deleteHabit(id: number): Promise<void> {}
 
 export async function markHabitCompletion(
   habitId: number,
-  date: string,
+  date?: string,
   completed: boolean,
-): Promise<void> {}
+): Promise<void> {
+  const response = await api.post(`/habits/${habitId}/complete`, {date: date});
+
+}
 
 export async function getHabitCompletions(
   habitId: number,
