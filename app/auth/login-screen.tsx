@@ -4,7 +4,6 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LogInIcon } from 'lucide-react-native';
 import { Box } from "@/components/ui/box";
 import { Image } from "@/components/ui/image";
@@ -12,12 +11,14 @@ import { Text } from "@/components/ui/text";
 import { Button, ButtonText } from '@/components/ui/button';
 import { GoogleLogo } from '@/components/icons/GoogleLogo';
 import { loginWithGoogle } from "@/api/auth";
+import { useAuth } from '@/contexts/AuthContext';
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const { signIn } = useAuth();
 
   const fadeText = useRef(new Animated.Value(0)).current;
   const slideText = useRef(new Animated.Value(30)).current;
@@ -25,10 +26,10 @@ export default function LoginScreen() {
   const fadeBtns = useRef(new Animated.Value(0)).current;
   const slideBtns = useRef(new Animated.Value(50)).current;
 
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-    responseType: 'id_token'
-  });
+  // const [request, response, promptAsync] = Google.useAuthRequest({
+  //   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  //   responseType: 'id_token'
+  // });
 
   useEffect(() => {
     Animated.stagger(200, [
@@ -43,30 +44,34 @@ export default function LoginScreen() {
     ]).start();
   }, []);
 
-  useEffect(() => {
-    if (response?.type === "success") {
-      console.log("GOOGLE: Resposta de sucesso recebida", response);
+  // useEffect(() => {
+  //   if (response?.type === "success") {
+  //     console.log("GOOGLE: Resposta de sucesso recebida", response);
 
-      const { authentication } = response;
+  //     const { authentication } = response;
       
-      const token = authentication?.idToken || response.params.id_token;
+  //     const token = authentication?.idToken || response.params.id_token;
 
-      if (token) {
-        handleGoogleLogin(token);
-      } else {
-        console.warn("GOOGLE: Auth sucesso, mas id_token é nulo.", response);
-        Alert.alert("Atenção", "O Google não retornou o token de identidade necessário.");
-      }
-    } else if (response?.type === "error") {
-      console.error("GOOGLE: Erro no retorno do Google", response.error);
-      Alert.alert("Erro", "Falha na autenticação com Google");
-    }
-  }, [response]);
+  //     if (token) {
+  //       handleGoogleLogin(token);
+  //     } else {
+  //       console.warn("GOOGLE: Auth sucesso, mas id_token é nulo.", response);
+  //       Alert.alert("Atenção", "O Google não retornou o token de identidade necessário.");
+  //     }
+  //   } else if (response?.type === "error") {
+  //     console.error("GOOGLE: Erro no retorno do Google", response.error);
+  //     Alert.alert("Erro", "Falha na autenticação com Google");
+  //   }
+  // }, [response]);
 
   const handleSuccess = async (data: any) => {
     try {
-      await AsyncStorage.setItem("@auth_token", data.token);
-      await AsyncStorage.setItem("@user_data", JSON.stringify(data)); 
+      await signIn({
+        id: data.userId,
+        name: data.name,
+        token: data.token,
+        avatar: data.avatar,
+      });
 
       console.log("LOGIN - Dados salvos no storage com sucesso.");
       router.replace("/home");
@@ -147,7 +152,7 @@ export default function LoginScreen() {
             </Box>
           </Button>
 
-          <Button
+          {/* <Button
             variant="outline"
             className="w-full h-16 rounded-full bg-white border border-gray-300 shadow-sm active:bg-gray-200"
             size="lg"
@@ -164,7 +169,7 @@ export default function LoginScreen() {
                  </ButtonText>
                </Box>
              )}
-          </Button>
+          </Button> */}
         </Animated.View>
       </Box>
     </LinearGradient>

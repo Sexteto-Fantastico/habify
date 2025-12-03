@@ -5,7 +5,7 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
-import { Stack } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -16,8 +16,33 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
 SplashScreen.preventAutoHideAsync();
+
+function ProtectedLayout() {
+  const { user, loading } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (loading) return;
+
+    const inAuthGroup = segments[0] === 'auth';
+
+    if (!user && !inAuthGroup) {
+      router.replace('/'); 
+    } else if (user && inAuthGroup) {
+      router.replace('/home');
+    }
+  }, [user, loading, segments]);
+
+  return <Stack>
+    <Stack.Screen name="index" options={{ headerShown: false }} />
+    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    <Stack.Screen name="auth" options={{ headerShown: false }} />
+  </Stack>;
+}
 
 export default function RootLayout() {
   const [colorMode, setColorMode] = useState<"light" | "dark">("light");
@@ -40,13 +65,11 @@ export default function RootLayout() {
 
   return (
     <GluestackUIProvider mode={colorMode}>
-      <ThemeProvider value={colorMode === "dark" ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="auth" options={{ headerShown: false }} />
-        </Stack>
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider value={colorMode === "dark" ? DarkTheme : DefaultTheme}>
+            <ProtectedLayout />
+        </ThemeProvider>
+      </AuthProvider>
     </GluestackUIProvider>
   );
 }

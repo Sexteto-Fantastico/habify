@@ -25,6 +25,7 @@ import { LightbulbIcon, LogOutIcon, Trash2Icon } from "lucide-react-native";
 import { Icon } from "@/components/ui/icon";
 import { Stack } from "expo-router";
 import { User } from "@/lib/types";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<User>({
@@ -37,10 +38,11 @@ export default function ProfilePage() {
 
   const { colorScheme, toggleColorScheme } = useColorScheme();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const { signOut } = useAuth();
 
   const logout = () => {
     console.log("Usuário deslogado");
-    // lógica real aqui
+    signOut();
   };
 
   const deleteAccount = () => {

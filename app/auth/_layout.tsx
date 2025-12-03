@@ -12,7 +12,6 @@ export default function AuthLayout() {
   const pathname = usePathname();
 
   const hiddenHeaderRoutes = [
-    "/auth/splash-screen",
     "/auth/login-screen"
   ];
 

@@ -9,6 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Heading } from "@/components/ui/heading";
 import WeekCalendar from "@/components/calendar/WeekCalendar";
 import StatsProgressionDay from "@/components/stats/StatsProgressionDay";
+import { useAuth } from "@/contexts/AuthContext";
 
 const initialHabits: Habit[] = [
   {
@@ -48,6 +49,7 @@ const initialHabits: Habit[] = [
 export default function HomeScreen() {
   const [habits, setHabits] = React.useState<Habit[]>([]);
   const [selectedDate, setSelectedDate] = React.useState(new Date());
+  const { user } = useAuth();
 
   React.useEffect(() => {
     loadHabits();
@@ -99,7 +101,7 @@ export default function HomeScreen() {
       <ScrollView className="pb-32 gap-4 p-4">
         <View>
           <View className="mb-4 gap-1">
-            <Heading size="2xl">Olá, {"Fulano"}!</Heading>
+            <Heading size="2xl">Olá, {user?.name || "Fulano"}!</Heading>
             <Text className="text-typography-500">
               Bora criar bons hábitos juntos!
             </Text>
