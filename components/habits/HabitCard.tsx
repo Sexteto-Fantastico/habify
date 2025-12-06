@@ -4,9 +4,12 @@ import { TagBadge } from "@/components/tags/TagBadge";
 import { Habit } from "@/lib/types";
 import { CheckIcon, ClockIcon } from "lucide-react-native";
 import { View } from "react-native";
-import { Button } from "../ui/button";
+import { Button, ButtonIcon } from "../ui/button";
 import { Text } from "../ui/text";
-import { formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/date";
+import { VStack } from "../ui/vstack";
+import { Box } from "../ui/box";
+import React from "react";
 
 interface HabitCardProps {
   habit: Habit;
@@ -16,39 +19,33 @@ interface HabitCardProps {
 export function HabitCard({ habit, onToggleCompletion }: HabitCardProps) {
   return (
     <Card>
-      <View className="mb-2 flex-row items-center justify-between">
-        <View className="flex-1 flex-col gap-2">
+      <Box className="mb-2 flex-row items-center justify-between">
+        <Box className="flex-1 flex-col gap-2">
           <Text size="lg">{habit.name}</Text>
-          {habit.description && <Text className="">{habit.description}</Text>}
-          {habit.createdAt && (
-            <View className="flex-row items-center gap-1">
-              <Icon as={ClockIcon} size="sm" className="text-gray-400" />
-              <Text className="text-xs text-gray-400">{formatDate(habit.createdAt)}</Text>
-            </View>
+          {habit.description && (
+            <Text className="text-typography-600">{habit.description}</Text>
           )}
-        </View>
+        </Box>
 
         <Button
-          variant="outline"
+          variant="solid"
+          action="positive"
           size="sm"
           onPress={() => onToggleCompletion(habit.id)}
         >
-          <Icon as={CheckIcon} size="lg" />
+          <ButtonIcon as={CheckIcon} />
         </Button>
-      </View>
-      <View>
-        <View className="flex-row items-start justify-between gap-4">
-          <View className="flex-1 gap-2">
-            {habit.tags && habit.tags.length > 0 && (
-              <View className="mt-1 flex-row flex-wrap gap-1">
-                {habit.tags.map((tag) => (
-                  <TagBadge key={tag.id} tag={tag} size="sm" />
-                ))}
-              </View>
-            )}
+      </Box>
+
+      <VStack>
+        {habit.tags && habit.tags.length > 0 && (
+          <View className="mt-1 flex-row flex-wrap gap-1">
+            {habit.tags.map((tag) => (
+              <TagBadge key={tag.id} tag={tag} size="sm" />
+            ))}
           </View>
-        </View>
-      </View>
+        )}
+      </VStack>
     </Card>
   );
 }

@@ -4,10 +4,22 @@ import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { HabitDetailCard } from "@/components/habits/HabitDetailCard";
 import { Habit, HabitFrequency, Tag } from "@/lib/types";
-import { ArrowLeftIcon, FilterIcon, TrendingUpIcon, CalendarIcon, BarChart3Icon } from "lucide-react-native";
+import {
+  ArrowLeftIcon,
+  FilterIcon,
+  TrendingUpIcon,
+  CalendarIcon,
+  BarChart3Icon,
+} from "lucide-react-native";
 import { Stack, useRouter } from "expo-router";
 import * as React from "react";
-import { View, ScrollView, Alert, Dimensions, useWindowDimensions } from "react-native";
+import {
+  View,
+  ScrollView,
+  Alert,
+  Dimensions,
+  useWindowDimensions,
+} from "react-native";
 import { getAllHabits, getHabitCompletions } from "@/api/habit";
 import { getHabitStats } from "@/api/stat";
 import { getAllTags } from "@/api/tag";
@@ -15,6 +27,7 @@ import { FrequencyLabel } from "@/constants/frequency-labels";
 import { StatsFilters } from "@/components/stats/StatsFilters";
 import { StatsCard } from "@/components/stats/StatsCard";
 import { LineChart, BarChart, ProgressChart } from "react-native-chart-kit";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // Tipos para os dados do gráfico
 interface ChartData {
@@ -45,7 +58,7 @@ export default function StatsScreen() {
     endDate?: string;
     tags?: string[];
   }>({});
-  
+
   // Novos estados para gráficos
   const [activityChartData, setActivityChartData] = React.useState<ChartData>({
     labels: [],
@@ -58,7 +71,7 @@ export default function StatsScreen() {
   const [completionChartData, setCompletionChartData] = React.useState({
     labels: ["Concluídos", "Pendentes"],
     data: [0, 0],
-    colors: ["#34C759", "#FF9500"]
+    colors: ["#34C759", "#FF9500"],
   });
 
   React.useEffect(() => {
@@ -81,8 +94,8 @@ export default function StatsScreen() {
   // Função para calcular a maior streak
   const calculateLongestStreak = (habitsWithCompletions: any[]) => {
     let longestStreak = 0;
-    
-    habitsWithCompletions.forEach(habit => {
+
+    habitsWithCompletions.forEach((habit) => {
       const completions = habit.completions
         .filter((c: any) => c.completed)
         .map((c: any) => new Date(c.date))
@@ -96,7 +109,7 @@ export default function StatsScreen() {
       for (let i = 1; i < completions.length; i++) {
         const prevDate = completions[i - 1];
         const currentDate = completions[i];
-        
+
         const diffTime = currentDate.getTime() - prevDate.getTime();
         const diffDays = diffTime / (1000 * 60 * 60 * 24);
 
@@ -119,13 +132,13 @@ export default function StatsScreen() {
     const last15Days = Array.from({ length: 15 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - (14 - i));
-      return date.toISOString().split('T')[0];
+      return date.toISOString().split("T")[0];
     });
 
-    const dailyCompletions = last15Days.map(date => {
+    const dailyCompletions = last15Days.map((date) => {
       return habitsWithCompletions.reduce((total, habit) => {
         const hasCompletion = habit.completions.some(
-          (c: any) => c.completed && c.date === date
+          (c: any) => c.completed && c.date === date,
         );
         return total + (hasCompletion ? 1 : 0);
       }, 0);
@@ -133,29 +146,32 @@ export default function StatsScreen() {
 
     // Labels otimizados para mobile - mostrar menos informações
     const labels = last15Days.map((date, index) => {
-      if (index % 3 === 0) { // Mostrar apenas a cada 3 dias
+      if (index % 3 === 0) {
+        // Mostrar apenas a cada 3 dias
         const d = new Date(date);
         return `${d.getDate()}/${d.getMonth() + 1}`;
       }
-      return '';
+      return "";
     });
 
     return {
       labels,
-      datasets: [{
-        data: dailyCompletions,
-        color: () => '#007AFF',
-        strokeWidth: 3, // Mais espesso para mobile
-      }],
+      datasets: [
+        {
+          data: dailyCompletions,
+          color: () => "#007AFF",
+          strokeWidth: 3, // Mais espesso para mobile
+        },
+      ],
     };
   };
 
   // Função para gerar dados do gráfico semanal - versão mobile otimizada
   const generateWeeklyChartData = (habitsWithCompletions: any[]) => {
-    const daysOfWeek = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']; // Abreviado para mobile
+    const daysOfWeek = ["D", "S", "T", "Q", "Q", "S", "S"]; // Abreviado para mobile
     const weeklyCompletions = Array(7).fill(0);
 
-    habitsWithCompletions.forEach(habit => {
+    habitsWithCompletions.forEach((habit) => {
       habit.completions.forEach((completion: any) => {
         if (completion.completed) {
           const date = new Date(completion.date);
@@ -167,10 +183,12 @@ export default function StatsScreen() {
 
     return {
       labels: daysOfWeek,
-      datasets: [{
-        data: weeklyCompletions,
-        color: () => '#34C759',
-      }],
+      datasets: [
+        {
+          data: weeklyCompletions,
+          color: () => "#34C759",
+        },
+      ],
     };
   };
 
@@ -183,7 +201,7 @@ export default function StatsScreen() {
     return {
       labels: ["Concluídos", "Pendentes"],
       data: [completedRate, pendingRate],
-      colors: ["#34C759", "#FF9500"]
+      colors: ["#34C759", "#FF9500"],
     };
   };
 
@@ -216,7 +234,7 @@ export default function StatsScreen() {
       const weeklyData = generateWeeklyChartData(habitsWithCompletions);
       const completionData = generateCompletionChartData({
         ...habitStats,
-        total: habitsWithCompletions.length
+        total: habitsWithCompletions.length,
       });
 
       let filteredHabits = habitsWithCompletions;
@@ -329,11 +347,8 @@ export default function StatsScreen() {
           ),
         }}
       />
-      <ScrollView 
-        className="flex-1 bg-background"
-        showsVerticalScrollIndicator={false}
-      >
-        <View className="gap-4 p-4">
+      <SafeAreaView className="flex-1 bg-background-100">
+        <ScrollView className="pb-32 p-4" showsVerticalScrollIndicator={false}>
           {showFilters && (
             <StatsFilters
               filters={filters}
@@ -353,15 +368,21 @@ export default function StatsScreen() {
 
           {/* Seção de Gráficos em Grid para Mobile */}
           <View className="gap-4">
-            <Text size="xl" weight="semibold">Visualizações</Text>
-            
+            <Text size="xl" weight="semibold">
+              Visualizações
+            </Text>
+
             {/* Grid de gráficos - 2 colunas para mobile */}
             <View className="flex-row flex-wrap gap-4">
               {/* Maior Streak - Card menor */}
               <View className="flex-1 min-w-[48%]">
                 <Card className="p-3">
                   <View className="items-center gap-2">
-                    <Icon as={TrendingUpIcon} size={18} className="text-primary" />
+                    <Icon
+                      as={TrendingUpIcon}
+                      size={18}
+                      className="text-primary"
+                    />
                     <Text size="sm" weight="semibold" className="text-center">
                       Maior Sequência
                     </Text>
@@ -369,8 +390,12 @@ export default function StatsScreen() {
                       <Text size="xl" weight="bold" className="text-primary">
                         {stats.longestStreak}
                       </Text>
-                      <Text size="xs" className="text-muted-foreground text-center">
-                        {stats.longestStreak === 1 ? 'dia' : 'dias'} consecutivos
+                      <Text
+                        size="xs"
+                        className="text-muted-foreground text-center"
+                      >
+                        {stats.longestStreak === 1 ? "dia" : "dias"}{" "}
+                        consecutivos
                       </Text>
                     </View>
                   </View>
@@ -381,7 +406,11 @@ export default function StatsScreen() {
               <View className="flex-1 min-w-[48%]">
                 <Card className="p-3">
                   <View className="items-center gap-2">
-                    <Icon as={BarChart3Icon} size={18} className="text-primary" />
+                    <Icon
+                      as={BarChart3Icon}
+                      size={18}
+                      className="text-primary"
+                    />
                     <Text size="sm" weight="semibold" className="text-center">
                       Progresso
                     </Text>
@@ -394,7 +423,10 @@ export default function StatsScreen() {
                       chartConfig={{
                         ...chartConfig,
                         color: (opacity = 1, index) => {
-                          return completionChartData.colors[index] || `rgba(0, 122, 255, ${opacity})`;
+                          return (
+                            completionChartData.colors[index] ||
+                            `rgba(0, 122, 255, ${opacity})`
+                          );
                         },
                       }}
                       hideLegend
@@ -409,7 +441,9 @@ export default function StatsScreen() {
               <Card className="p-4">
                 <View className="flex-row items-center gap-3 mb-3">
                   <Icon as={CalendarIcon} size={18} className="text-primary" />
-                  <Text size="lg" weight="semibold">Atividades (15 dias)</Text>
+                  <Text size="lg" weight="semibold">
+                    Atividades (15 dias)
+                  </Text>
                 </View>
                 <LineChart
                   data={activityChartData}
@@ -435,7 +469,9 @@ export default function StatsScreen() {
               <Card className="p-4">
                 <View className="flex-row items-center gap-3 mb-3">
                   <Icon as={BarChart3Icon} size={18} className="text-primary" />
-                  <Text size="lg" weight="semibold">Distribuição Semanal</Text>
+                  <Text size="lg" weight="semibold">
+                    Distribuição Semanal
+                  </Text>
                 </View>
                 <BarChart
                   data={weeklyChartData}
@@ -460,7 +496,9 @@ export default function StatsScreen() {
 
           {/* Seção de Detalhes por Hábito */}
           <View className="gap-3 mt-4">
-            <Text size="xl" weight="semibold">Detalhes por Hábito</Text>
+            <Text size="xl" weight="semibold">
+              Detalhes por Hábito
+            </Text>
             {habits.length === 0 ? (
               <Card>
                 <View className="py-8">
@@ -489,8 +527,8 @@ export default function StatsScreen() {
               })
             )}
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     </>
   );
 }

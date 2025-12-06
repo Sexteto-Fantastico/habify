@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useColorScheme } from "nativewind";
 import {
   Avatar,
@@ -21,113 +21,125 @@ import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { ScrollView } from "react-native";
 import { SafeAreaView } from "@/components/ui/safe-area-view";
-import { LightbulbIcon, LogOutIcon, Trash2Icon } from "lucide-react-native";
+import {
+  CalendarIcon,
+  LightbulbIcon,
+  LogOutIcon,
+  Mail,
+  Trash2Icon,
+} from "lucide-react-native";
 import { Icon } from "@/components/ui/icon";
-import { Stack } from "expo-router";
-import { User } from "@/lib/types";
 import { useAuth } from "@/contexts/AuthContext";
+import { getUser } from "@/api/user";
+import { User } from "@/lib/types";
+import { VStack } from "@/components/ui/vstack";
+import { HStack } from "@/components/ui/hstack";
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<User>({
-    id: 1,
-    name: "Pedro",
-    email: "pedro@example.com",
-    avatar: "SC",
-    createdAt: new Date(),
-  });
-
   const { colorScheme, toggleColorScheme } = useColorScheme();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const { signOut } = useAuth();
 
-  const logout = () => {
-    console.log("Usuário deslogado");
-    signOut();
-  };
-
   const deleteAccount = () => {
-    console.log("Conta deletada");
-    // lógica real aqui
     setDeleteOpen(false);
   };
 
+  const loadUser = async () => {
+    const user = await getUser();
+    setUser(user);
+  };
+
+  useEffect(() => {
+    loadUser();
+  }, []);
+
   return (
     <>
-      <Stack.Screen
-        options={{
-          header: () => {
-            return (
-              <SafeAreaView
-                className="gap-8 p-6 bg-background-0 border border-typography-100 border-b-2"
-                edges={["top"]}
-              >
-                <Heading size="2xl">Seu Perfil</Heading>
-                <Box className="flex-row justify-between items-center">
-                  <Box className="flex-row items-center justify-center gap-4">
-                    <Avatar size="lg">
-                      <AvatarFallbackText>{user.name}</AvatarFallbackText>
-                      <AvatarImage source={undefined} />
-                    </Avatar>
+      <SafeAreaView
+        className="gap-8 p-6 bg-background-0 border border-typography-100 border-b-2"
+        edges={["top"]}
+      >
+        <Heading size="2xl">Seu Perfil</Heading>
+        <HStack space="3xl" className="items-center">
+          <Avatar size="lg">
+            <AvatarFallbackText>{user?.name}</AvatarFallbackText>
+            <AvatarImage source={user?.avatar || user?.name.charAt(0)} />
+          </Avatar>
 
-                    <Box>
-                      <Heading size="xl">{user.name}</Heading>
-                      <Text className="text-typography-500">{user.email}</Text>
-                    </Box>
-                  </Box>
-                </Box>
-              </SafeAreaView>
-            );
-          },
-        }}
-      />
-
-      <ScrollView className="p-6 bg-background-100">
-        {/* Geral */}
-        <Box className="flex gap-2 mb-6">
-          <Heading className="text-typography-400 text-sm">
-            {"Geral".toUpperCase()}
-          </Heading>
-
-          <Card className="rounded-xl">
-            <Box className="flex-row justify-between items-center">
-              <Box className="flex-row gap-2 items-center">
-                <Icon as={LightbulbIcon} size="xl" />
-                <Text className="font-medium" size="lg">
-                  Modo Escuro
-                </Text>
-              </Box>
-
-              <Switch
-                value={colorScheme === "dark"}
-                onValueChange={toggleColorScheme}
+          <VStack>
+            <Heading size="xl" className="mb-2">
+              {user?.name}
+            </Heading>
+            <HStack className="items-center">
+              <Icon as={Mail} size="xs" className="mr-2 text-typography-500" />
+              <Text size="sm" className="text-typography-500">
+                {user?.email}
+              </Text>
+            </HStack>
+            <HStack className="items-center">
+              <Icon
+                as={CalendarIcon}
+                size="xs"
+                className="mr-2 text-typography-500"
               />
+              <Text size="sm" className="text-typography-500">
+                Desde{" "}
+                {new Date(user?.createdAt ?? Date.now()).toLocaleDateString()}
+              </Text>
+            </HStack>
+          </VStack>
+        </HStack>
+      </SafeAreaView>
+      <ScrollView className="p-4 bg-background-100">
+        <Card>
+          <Box className="mb-4">
+            <Text size="xl">Geral</Text>
+          </Box>
+          <HStack className="justify-between items-center px-2">
+            <Box className="flex-row gap-2 items-center">
+              <Icon as={LightbulbIcon} size="xl" />
+              <Text className="font-medium" size="lg">
+                Modo Escuro
+              </Text>
             </Box>
-          </Card>
-        </Box>
 
-        <Box className="flex gap-2">
-          <Heading className="text-typography-400 text-sm">
-            {"Conta".toUpperCase()}
-          </Heading>
+            <Switch
+              value={colorScheme === "dark"}
+              onValueChange={toggleColorScheme}
+            />
+          </HStack>
+        </Card>
 
-          <Card>
-            <Box className="flex-row gap-4">
-              <Box className="flex-1">
-                <Button variant="outline" action="secondary" onPress={logout}>
-                  <ButtonIcon as={LogOutIcon} />
-                  <ButtonText>Sair da Conta</ButtonText>
-                </Button>
-              </Box>
-
-              <Box className="flex-1">
-                <Button action="negative" onPress={() => setDeleteOpen(true)}>
-                  <ButtonIcon as={Trash2Icon} />
-                  <ButtonText>Deletar Conta</ButtonText>
-                </Button>
-              </Box>
+        <Card className="mt-4">
+          <Box className="flex-row justify-between items-center mb-4">
+            <Text size="xl">Conta</Text>
+          </Box>
+          <Box className="flex-row gap-2 p-2">
+            <Box className="flex-1">
+              <Button
+                size="sm"
+                variant="outline"
+                action="secondary"
+                onPress={signOut}
+              >
+                <ButtonIcon as={LogOutIcon} />
+                <ButtonText>Sair da Conta</ButtonText>
+              </Button>
             </Box>
-          </Card>
-        </Box>
+
+            <Box className="flex-1">
+              <Button
+                size="sm"
+                action="negative"
+                onPress={() => setDeleteOpen(true)}
+              >
+                <ButtonIcon as={Trash2Icon} />
+                <ButtonText>Deletar Conta</ButtonText>
+              </Button>
+            </Box>
+          </Box>
+        </Card>
 
         <AlertDialog
           size="md"

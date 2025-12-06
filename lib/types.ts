@@ -3,8 +3,8 @@ export type HabitFrequency = "daily" | "weekly" | "monthly";
 export interface User {
   id: number;
   name: string;
-  avatar: string;
   email: string;
+  avatar?: string;
   createdAt: Date;
 }
 
@@ -39,6 +39,6 @@ export interface HabitStats {
   notCompleted: number;
 }
 
-export interface HabitFilter{
+export interface HabitFilter {
   createdDate: Date;
 }

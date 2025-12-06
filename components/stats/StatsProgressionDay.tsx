@@ -3,15 +3,17 @@ import { View } from "react-native";
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { Habit } from "@/lib/types";
+import { Box } from "../ui/box";
 
 interface StatesProgressionDayProps {
   habits: Habit[];
   selectedDate: Date;
-
 }
 
-const StatsProgressionDay = ({habits,selectedDate}: StatesProgressionDayProps) => {
-
+const StatsProgressionDay = ({
+  habits,
+  selectedDate,
+}: StatesProgressionDayProps) => {
   // Função auxiliar para verificar se um hábito foi completado na data selecionada
   const isHabitCompletedForDate = (habit: Habit, targetDate: Date): boolean => {
     const targetDateString = targetDate.toISOString().split("T")[0];
@@ -33,29 +35,29 @@ const StatsProgressionDay = ({habits,selectedDate}: StatesProgressionDayProps) =
 
   return (
     <Card className="m-1">
-      <View className="flex-row justify-between items-center mb-2">
-        <Text className="font-semibold" size="2xl">
-          Progresso do Dia
+      <Box className="flex-row justify-between items-center mb-2">
+        <Text className="font-semibold" size="xl">
+          Progresso do dia
         </Text>
-        <Text className="text-gray-600">
+        <Text className="text-typography-600">
           {completedHabits}/{totalHabits}
         </Text>
-      </View>
+      </Box>
 
-      <View className="w-full bg-gray-200 rounded-full h-3">
-        <View
-          className="bg-green-500 h-3 rounded-full"
+      <Box className="w-full bg-typography-100 rounded-full h-3">
+        <Box
+          className="bg-success-500 h-3 rounded-full"
           style={{ width: `${progress}%` }}
         />
-      </View>
+      </Box>
 
-      <Text className="text-green-500 text-sm mt-2 font-medium">
+      <Text className="text-success-500 text-sm mt-2 font-medium">
         {progress === 100
           ? "Todos os hábitos concluídos! 🎉"
           : `${Math.round(progress)}% concluído`}
       </Text>
     </Card>
-  )
-}
+  );
+};
 
 export default StatsProgressionDay;

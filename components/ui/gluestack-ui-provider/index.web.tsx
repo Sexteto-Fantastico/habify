@@ -6,7 +6,7 @@ import { ToastProvider } from "@gluestack-ui/core/toast/creator";
 import { setFlushStyles } from "@gluestack-ui/utils/nativewind-utils";
 import { script } from "./script";
 
-export type ModeType = "light" | "dark" | "system";
+type ModeType = "light" | "dark" | "system";
 
 const variableStyleTagId = "nativewind-style";
 const createStyle = (styleTagId: string) => {

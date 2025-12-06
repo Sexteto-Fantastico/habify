@@ -1,28 +1,34 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Alert, Animated, StatusBar, ActivityIndicator, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Alert,
+  Animated,
+  StatusBar,
+  ActivityIndicator,
+  Platform,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
-import { LogInIcon } from 'lucide-react-native';
+import { LogInIcon } from "lucide-react-native";
 import { Box } from "@/components/ui/box";
 import { Image } from "@/components/ui/image";
 import { Text } from "@/components/ui/text";
-import { Button, ButtonText } from '@/components/ui/button';
-import { GoogleLogo } from '@/components/icons/GoogleLogo';
+import { Button, ButtonText } from "@/components/ui/button";
+import { GoogleLogo } from "@/components/icons/GoogleLogo";
 import { loginWithGoogle } from "@/api/auth";
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from "@/contexts/AuthContext";
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { login: signIn } = useAuth();
 
   const fadeText = useRef(new Animated.Value(0)).current;
   const slideText = useRef(new Animated.Value(30)).current;
-  
+
   const fadeBtns = useRef(new Animated.Value(0)).current;
   const slideBtns = useRef(new Animated.Value(50)).current;
 
@@ -34,13 +40,29 @@ export default function LoginScreen() {
   useEffect(() => {
     Animated.stagger(200, [
       Animated.parallel([
-        Animated.timing(fadeText, { toValue: 1, duration: 800, useNativeDriver: Platform.OS !== 'web' }),
-        Animated.spring(slideText, { toValue: 0, friction: 8, useNativeDriver: Platform.OS !== 'web' }),
+        Animated.timing(fadeText, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: Platform.OS !== "web",
+        }),
+        Animated.spring(slideText, {
+          toValue: 0,
+          friction: 8,
+          useNativeDriver: Platform.OS !== "web",
+        }),
       ]),
       Animated.parallel([
-        Animated.timing(fadeBtns, { toValue: 1, duration: 800, useNativeDriver: Platform.OS !== 'web' }),
-        Animated.spring(slideBtns, { toValue: 0, friction: 8, useNativeDriver: Platform.OS !== 'web' }),
-      ])
+        Animated.timing(fadeBtns, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: Platform.OS !== "web",
+        }),
+        Animated.spring(slideBtns, {
+          toValue: 0,
+          friction: 8,
+          useNativeDriver: Platform.OS !== "web",
+        }),
+      ]),
     ]).start();
   }, []);
 
@@ -49,7 +71,7 @@ export default function LoginScreen() {
   //     console.log("GOOGLE: Resposta de sucesso recebida", response);
 
   //     const { authentication } = response;
-      
+
   //     const token = authentication?.idToken || response.params.id_token;
 
   //     if (token) {
@@ -95,47 +117,50 @@ export default function LoginScreen() {
   };
 
   const redirectToEmailLogin = () => {
-    router.push('/auth/login');
-  }
+    router.push("/auth/login");
+  };
 
   return (
     <LinearGradient
-      colors={['#6B73FF', '#000DFF']}
+      colors={["#6B73FF", "#000DFF"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={{ flex: 1 }}
     >
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      <StatusBar
+        barStyle="light-content"
+        translucent
+        backgroundColor="transparent"
+      />
 
       <Image
-        source={require('@/assets/images/circle-bg.png')}
+        source={require("@/assets/images/circle-bg.png")}
         alt="Background Pattern"
         resizeMode="contain"
-        className="absolute w-full h-full" 
+        className="absolute w-full h-full"
       />
 
       <Box className="flex-1 justify-between px-6 py-12">
-          
-        <Animated.View 
-          style={{ 
-            flex: 1, 
-            justifyContent: 'flex-end', 
+        <Animated.View
+          style={{
+            flex: 1,
+            justifyContent: "flex-end",
             opacity: fadeText,
-            transform: [{ translateY: slideText }] 
+            transform: [{ translateY: slideText }],
           }}
         >
-           <Text className="text-white text-5xl font-bold leading-tight">
-             Comece a criar bons hábitos agora
-           </Text>
+          <Text className="text-white text-5xl font-bold leading-tight">
+            Comece a criar bons hábitos agora
+          </Text>
         </Animated.View>
 
-        <Animated.View 
-          style={{ 
-            flex: 1, 
-            justifyContent: 'flex-end', 
+        <Animated.View
+          style={{
+            flex: 1,
+            justifyContent: "flex-end",
             gap: 16,
             opacity: fadeBtns,
-            transform: [{ translateY: slideBtns }]
+            transform: [{ translateY: slideBtns }],
           }}
         >
           <Button
@@ -145,10 +170,10 @@ export default function LoginScreen() {
             disabled={isLoading}
           >
             <Box className="flex-row items-center gap-3">
-               <LogInIcon color="#040415" size={20} />
-               <ButtonText className="font-semibold text-lg text-[#040415]">
-                 Entrar com e-mail
-               </ButtonText>
+              <LogInIcon color="#040415" size={20} />
+              <ButtonText className="font-semibold text-lg text-[#040415]">
+                Entrar com e-mail
+              </ButtonText>
             </Box>
           </Button>
 

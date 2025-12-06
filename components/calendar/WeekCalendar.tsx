@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, TouchableOpacity, ScrollView } from "react-native";
-import { Motion } from "@legendapp/motion";
 import { ArrowLeft, ArrowRight } from "lucide-react-native";
-import { Card } from "../ui/card";
+import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
+import { Pressable } from "@/components/ui/pressable";
+import { cn } from "@/lib/utils";
+import { HStack } from "../ui/hstack";
+import { Box } from "../ui/box";
+import { Button, ButtonIcon } from "../ui/button";
 
 interface Day {
   date: Date;
@@ -74,64 +77,57 @@ const WeekCalendar = ({ selectedDate, onDateSelect }: WeekCalendarProps) => {
 
   return (
     <Card className="m-1">
-      <View className="flex-row justify-between items-center mb-4">
-        <TouchableOpacity
-          className="w-8 h-8 items-center justify-center bg-gray-100 rounded-full active:bg-gray-200"
+      <Box className="flex-row justify-between items-center mb-4">
+        <Button
+          size="sm"
+          variant="outline"
+          action="secondary"
           onPress={() => navigateWeek("prev")}
         >
-          <ArrowLeft className="text-blue-500" />
-        </TouchableOpacity>
+          <ButtonIcon as={ArrowLeft} />
+        </Button>
 
-        <Text size="2xl">
+        <Text size="xl" className="font-medium">
           {selectedDate.toLocaleDateString("pt-BR", {
             month: "long",
             year: "numeric",
           })}
         </Text>
 
-        <TouchableOpacity onPress={() => navigateWeek("next")}>
-          <ArrowRight className="text-blue-500" />
-        </TouchableOpacity>
-      </View>
+        <Button
+          size="sm"
+          variant="outline"
+          action="secondary"
+          onPress={() => navigateWeek("next")}
+        >
+          <ButtonIcon as={ArrowRight} />
+        </Button>
+      </Box>
 
-      <View className="flex-row justify-between">
+      <HStack className="items-center w-full">
         {currentWeek.map((day, index) => (
-          <Motion.View
+          <Pressable
             key={index}
-            className={`flex-1 mx-1 items-center py-3 rounded-xl ${
-              day.isSelected ? "bg-blue-500" : "bg-gray-100"
-            }`}
-            whileTap={{ scale: 0.95 }}
+            onPress={() => handleDateSelect(day.date)}
+            className={cn(
+              "flex-1 mx-1 items-center py-3 rounded-xl",
+              day.isSelected ? "bg-primary-500" : "bg-background-100",
+              day.isToday && "border-2 border-primary-500",
+            )}
           >
-            <TouchableOpacity
-              onPress={() => handleDateSelect(day.date)}
-              className="items-center w-full"
-            >
-              <Text
-                className={`text-xs font-medium ${
-                  day.isSelected ? "text-white" : "text-gray-600"
-                }`}
-              >
-                {day.dayOfWeek}
-              </Text>
-              <Text
-                className={`text-base font-bold mt-1 ${
-                  day.isSelected
-                    ? "text-white"
-                    : day.isToday
-                      ? "text-blue-500"
-                      : "text-gray-800"
-                }`}
-              >
-                {day.dayOfMonth}
-              </Text>
-              {day.isToday && !day.isSelected && (
-                <View className="w-1 h-1 bg-blue-500 rounded-full mt-1" />
+            <Text className={cn("text-xs font-medium")}>{day.dayOfWeek}</Text>
+            <Text
+              className={cn(
+                "font-bold text-lg",
+                day.isSelected && "text-typography-900",
+                day.isToday && !day.isSelected && "text-primary-500",
               )}
-            </TouchableOpacity>
-          </Motion.View>
+            >
+              {day.dayOfMonth}
+            </Text>
+          </Pressable>
         ))}
-      </View>
+      </HStack>
     </Card>
   );
 };

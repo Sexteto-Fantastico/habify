@@ -1,23 +1,36 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { isTokenExpired } from './utils/token';
-import { Alert, AlertIcon, AlertText } from '@/components/ui/alert';
-import { InfoIcon } from '@/components/ui/icon';
-import { STORAGE_KEY } from '@/constants/auth';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { isTokenExpired } from "@/lib/token";
+import { Alert, AlertIcon, AlertText } from "@/components/ui/alert";
+import { InfoIcon } from "@/components/ui/icon";
+import { STORAGE_KEY } from "@/constants/auth";
+import { User } from "@/lib/types";
+import { login } from "@/api/auth";
 
-interface UserDTO {
-  id: string;
+interface SignInData {
+  email: string;
+  password: string;
+}
+
+interface UserContext {
+  id: number;
   name: string;
   avatar?: string;
   token?: string;
 }
 
 interface AuthContextData {
-  user: UserDTO | null;
+  user: UserContext | null;
   loading: boolean;
-  signIn: (userData: UserDTO) => Promise<void>;
+  signIn: (loginData: SignInData) => Promise<void>;
   signOut: () => Promise<void>;
-  updateUser: (userData: Partial<UserDTO>) => Promise<void>;
+  isSignedIn: boolean;
 }
 
 interface AuthProviderProps {
@@ -27,14 +40,14 @@ interface AuthProviderProps {
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<UserDTO | null>(null);
+  const [user, setUser] = useState<UserContext | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadStorageData() {
       try {
         const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
-        
+
         if (!jsonValue) {
           setLoading(false);
           return;
@@ -49,30 +62,38 @@ export function AuthProvider({ children }: AuthProviderProps) {
           <Alert action="info" variant="outline">
             <AlertIcon as={InfoIcon} />
             <AlertText>Description of alert!</AlertText>
-          </Alert>
+          </Alert>;
         } else {
           setUser(userData);
         }
-
       } catch (error) {
-        console.error('Erro ao verificar sessão:', error);
+        console.error("Erro ao verificar sessão:", error);
         await AsyncStorage.removeItem(STORAGE_KEY);
         setUser(null);
       } finally {
         setLoading(false);
-      }    
+      }
     }
 
     loadStorageData();
   }, []);
 
-  async function signIn(userData: UserDTO) {
+  async function signIn(loginData: SignInData) {
     try {
+      const data = await login(loginData.email, loginData.password);
+
+      const userData: UserContext = {
+        id: parseInt(data.userId),
+        name: data.name,
+        token: data.token,
+        avatar: data.avatar,
+      };
+
       setUser(userData);
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
     } catch (error) {
-      console.error('Erro ao salvar login:', error);
-      throw new Error('Falha ao salvar dados de login');
+      console.error("Erro ao salvar login:", error);
+      throw new Error("Falha ao salvar dados de login");
     }
   }
 
@@ -81,24 +102,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(null);
       await AsyncStorage.removeItem(STORAGE_KEY);
     } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-    }
-  }
-
-  async function updateUser(updates: Partial<UserDTO>) {
-    if (!user) return;
-    
-    try {
-      const updatedUser = { ...user, ...updates };
-      setUser(updatedUser);
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedUser));
-    } catch (error) {
-      console.error('Erro ao atualizar usuário:', error);
+      console.error("Erro ao fazer logout:", error);
     }
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut, updateUser }}>
+    <AuthContext.Provider
+      value={{ user, loading, signIn, signOut, isSignedIn: !!user }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -108,7 +119,7 @@ export function useAuth() {
   const context = useContext(AuthContext);
 
   if (!context) {
-    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
+    throw new Error("useAuth deve ser usado dentro de um AuthProvider");
   }
 
   return context;

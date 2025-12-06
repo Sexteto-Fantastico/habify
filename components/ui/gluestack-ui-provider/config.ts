@@ -1,19 +1,8 @@
 "use client";
 import { vars } from "nativewind";
 
-/*
-PALETA BASEADA NA IMAGEM ENVIADA
-Primary Blue: #3B5BFF (59 91 255)
-Info Blue: #4BA3FF (75 163 255)
-Error Coral: #E35A59 (227 90 89)
-Warning Orange: #F29B2F (242 155 47)
-Success Green: #28C37B (40 195 123)
-Neutral Whites & Blacks da imagem
-*/
-
 export const config = {
   light: vars({
-    /* PRIMARY (AZUL PRINCIPAL) */
     "--color-primary-0": "235 240 255",
     "--color-primary-50": "213 223 255",
     "--color-primary-100": "189 206 255",
@@ -27,7 +16,6 @@ export const config = {
     "--color-primary-900": "22 35 100",
     "--color-primary-950": "14 22 70",
 
-    /* NEUTRAL / SECONDARY (CLARO) */
     "--color-secondary-0": "255 255 255",
     "--color-secondary-50": "248 248 248",
     "--color-secondary-100": "240 240 240",
@@ -41,7 +29,6 @@ export const config = {
     "--color-secondary-900": "45 45 45",
     "--color-secondary-950": "25 25 25",
 
-    /* WARNING (LARANJA) */
     "--color-warning-0": "255 244 230",
     "--color-warning-50": "255 232 205",
     "--color-warning-100": "255 219 178",
@@ -55,7 +42,6 @@ export const config = {
     "--color-warning-900": "110 55 15",
     "--color-warning-950": "75 38 10",
 
-    /* ERROR (VERMELHO CORAL) */
     "--color-error-0": "255 238 238",
     "--color-error-50": "255 222 222",
     "--color-error-100": "255 200 200",
@@ -69,7 +55,6 @@ export const config = {
     "--color-error-900": "85 20 20",
     "--color-error-950": "55 10 10",
 
-    /* SUCCESS (VERDE) */
     "--color-success-0": "230 255 242",
     "--color-success-50": "210 255 230",
     "--color-success-100": "180 245 210",
@@ -83,7 +68,6 @@ export const config = {
     "--color-success-900": "14 65 40",
     "--color-success-950": "10 45 28",
 
-    /* INFO (AZUL CLARO) */
     "--color-info-0": "235 248 255",
     "--color-info-50": "210 235 255",
     "--color-info-100": "185 225 255",
@@ -97,7 +81,6 @@ export const config = {
     "--color-info-900": "18 50 90",
     "--color-info-950": "12 30 60",
 
-    /* TYPOGRAPHY */
     "--color-typography-0": "255 255 255",
     "--color-typography-50": "240 240 240",
     "--color-typography-100": "220 220 220",
@@ -111,7 +94,6 @@ export const config = {
     "--color-typography-900": "15 15 15",
     "--color-typography-950": "0 0 0",
 
-    /* BACKGROUND */
     "--color-background-0": "255 255 255",
     "--color-background-50": "248 248 248",
     "--color-background-100": "240 240 240",
@@ -125,7 +107,6 @@ export const config = {
     "--color-background-900": "45 45 45",
     "--color-background-950": "20 20 20",
 
-    /* Outline */
     "--color-outline-0": "250 250 250",
     "--color-outline-50": "230 230 230",
     "--color-outline-100": "210 210 210",
@@ -139,11 +120,7 @@ export const config = {
     "--color-outline-900": "20 20 20",
     "--color-outline-950": "10 10 10",
   }),
-
-  /* -------- DARK MODE -------- */
-
   dark: vars({
-    /* PRIMARY (AZUL) */
     "--color-primary-0": "12 22 50",
     "--color-primary-50": "18 32 70",
     "--color-primary-100": "22 35 100",
@@ -157,7 +134,6 @@ export const config = {
     "--color-primary-900": "213 223 255",
     "--color-primary-950": "235 240 255",
 
-    /* NEUTRAL DARK */
     "--color-secondary-0": "10 10 10",
     "--color-secondary-50": "18 18 18",
     "--color-secondary-100": "28 28 28",
@@ -171,7 +147,6 @@ export const config = {
     "--color-secondary-900": "220 220 220",
     "--color-secondary-950": "245 245 245",
 
-    /* WARNING */
     "--color-warning-0": "60 35 15",
     "--color-warning-50": "80 45 20",
     "--color-warning-100": "110 55 15",
@@ -185,7 +160,6 @@ export const config = {
     "--color-warning-900": "255 232 205",
     "--color-warning-950": "255 244 230",
 
-    /* ERROR */
     "--color-error-0": "50 15 15",
     "--color-error-50": "70 20 20",
     "--color-error-100": "100 30 30",
@@ -199,7 +173,6 @@ export const config = {
     "--color-error-900": "255 233 233",
     "--color-error-950": "255 240 240",
 
-    /* SUCCESS */
     "--color-success-0": "10 35 25",
     "--color-success-50": "14 65 40",
     "--color-success-100": "20 95 60",
@@ -213,7 +186,6 @@ export const config = {
     "--color-success-900": "210 255 230",
     "--color-success-950": "230 255 242",
 
-    /* INFO */
     "--color-info-0": "10 25 40",
     "--color-info-50": "14 40 60",
     "--color-info-100": "18 50 90",
@@ -227,7 +199,6 @@ export const config = {
     "--color-info-900": "210 235 255",
     "--color-info-950": "235 248 255",
 
-    /* TYPOGRAPHY DARK */
     "--color-typography-0": "0 0 0",
     "--color-typography-50": "15 15 15",
     "--color-typography-100": "30 30 30",
@@ -241,7 +212,6 @@ export const config = {
     "--color-typography-900": "245 245 245",
     "--color-typography-950": "255 255 255",
 
-    /* BACKGROUND DARK */
     "--color-background-0": "10 10 10",
     "--color-background-50": "18 18 18",
     "--color-background-100": "28 28 28",
@@ -254,5 +224,18 @@ export const config = {
     "--color-background-800": "200 200 200",
     "--color-background-900": "230 230 230",
     "--color-background-950": "255 255 255",
+
+    "--color-outline-0": "10 10 10",
+    "--color-outline-50": "20 20 20",
+    "--color-outline-100": "35 35 35",
+    "--color-outline-200": "50 50 50",
+    "--color-outline-300": "75 75 75",
+    "--color-outline-400": "105 105 105",
+    "--color-outline-500": "130 130 130",
+    "--color-outline-600": "160 160 160",
+    "--color-outline-700": "185 185 185",
+    "--color-outline-800": "210 210 210",
+    "--color-outline-900": "230 230 230",
+    "--color-outline-950": "250 250 250",
   }),
 };

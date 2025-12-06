@@ -1,36 +1,24 @@
 import { Text } from "@/components/ui/text";
 import { Tag } from "@/lib/types";
-import { View } from "react-native";
+import { cn } from "@/lib/utils";
+import { Box } from "../ui/box";
 
 interface TagBadgeProps {
   tag: Tag;
   size?: "sm" | "md";
-  showColor?: boolean;
 }
 
-export function TagBadge({
-  tag,
-  size = "md",
-  showColor = true,
-}: TagBadgeProps) {
-  const sizeClasses = {
-    sm: "h-2 w-2",
-    md: "h-3 w-3",
-  };
-
-  const textSize = size === "sm" ? "text-xs" : "text-sm";
+export function TagBadge({ tag, size = "md" }: TagBadgeProps) {
+  const textSize = size === "sm" ? "text-sm" : "text-md";
 
   return (
-    <View className="flex-row items-center gap-1 rounded-full bg-muted px-2 py-1">
-      {showColor && (
-        <View
-          className={`${sizeClasses[size]} rounded-full`}
-          style={{ backgroundColor: tag.color }}
-        />
-      )}
-      <Text size="sm" className={textSize}>
+    <Box
+      className={cn("flex flex-row items-center rounded-full px-2 py-1")}
+      style={{ backgroundColor: tag.color }}
+    >
+      <Text size="sm" className={cn(textSize, "font-medium text-white")}>
         {tag.name}
       </Text>
-    </View>
+    </Box>
   );
 }
