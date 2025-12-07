@@ -44,10 +44,6 @@ export function StatsFilters({
 
   return (
     <Card>
-      <View>
-        <Text>Filtros</Text>
-        <Text>Filtre suas estatísticas</Text>
-      </View>
       <View className="gap-4">
         <View className="gap-2">
           <Text>Frequência</Text>

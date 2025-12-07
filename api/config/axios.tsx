@@ -2,7 +2,7 @@ import axios, {
   AxiosInstance,
   AxiosResponse,
   InternalAxiosRequestConfig,
-  AxiosError
+  AxiosError,
 } from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as NavigationService from "@/app/auth/navigation";
@@ -31,15 +31,15 @@ api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
       const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
-      
+
       if (jsonValue && config.headers) {
         const userData = JSON.parse(jsonValue);
-        
-        const token = userData?.token; 
+
+        const token = userData?.token;
 
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
-          console.log("Token anexado ao header com sucesso"); 
+          console.log("Token anexado ao header com sucesso");
         }
       }
     } catch (error) {
@@ -62,13 +62,13 @@ api.interceptors.response.use(
     if (error.response) {
       const { data, status } = error.response;
 
-      if (data && typeof data === 'object') {
-        if ('error' in data) {
+      if (data && typeof data === "object") {
+        if ("error" in data) {
           txtMensagem = (data as any).error;
-        } else if ('message' in data) {
+        } else if ("message" in data) {
           txtMensagem = (data as any).message;
         }
-      } else if (typeof data === 'string') {
+      } else if (typeof data === "string") {
         txtMensagem = data;
       }
 
@@ -76,8 +76,10 @@ api.interceptors.response.use(
         try {
           await AsyncStorage.removeItem(STORAGE_KEY);
           NavigationService.resetToLogin();
-          
-          return Promise.reject(new Error("Sessão expirada. Faça login novamente."));
+
+          return Promise.reject(
+            new Error("Sessão expirada. Faça login novamente."),
+          );
         } catch (logoutError) {
           console.log("Erro ao limpar dados de sessão", logoutError);
         }

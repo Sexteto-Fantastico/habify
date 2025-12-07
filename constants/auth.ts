@@ -1,1 +1,1 @@
-export const STORAGE_KEY = '@Habify:user';
+export const STORAGE_KEY = "@Habify:user";
