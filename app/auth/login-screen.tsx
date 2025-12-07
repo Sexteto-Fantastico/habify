@@ -24,7 +24,7 @@ WebBrowser.maybeCompleteAuthSession();
 export default function LoginScreen() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const { login: signIn } = useAuth();
+  const { signIn } = useAuth();
 
   const fadeText = useRef(new Animated.Value(0)).current;
   const slideText = useRef(new Animated.Value(30)).current;
@@ -89,10 +89,8 @@ export default function LoginScreen() {
   const handleSuccess = async (data: any) => {
     try {
       await signIn({
-        id: data.userId,
-        name: data.name,
-        token: data.token,
-        avatar: data.avatar,
+        email: data.email,
+        password: data.password,
       });
 
       console.log("LOGIN - Dados salvos no storage com sucesso.");
@@ -164,14 +162,14 @@ export default function LoginScreen() {
           }}
         >
           <Button
-            className="w-full h-16 rounded-full bg-white active:bg-gray-200"
+            className="w-full h-16 rounded-full bg-white active:bg-background-50"
             size="lg"
             onPress={redirectToEmailLogin}
             disabled={isLoading}
           >
             <Box className="flex-row items-center gap-3">
-              <LogInIcon color="#040415" size={20} />
-              <ButtonText className="font-semibold text-lg text-[#040415]">
+              <LogInIcon color="#151515" size={20} />
+              <ButtonText className="font-semibold text-lg text-typography-black">
                 Entrar com e-mail
               </ButtonText>
             </Box>
@@ -179,22 +177,23 @@ export default function LoginScreen() {
 
           {/* <Button
             variant="outline"
-            className="w-full h-16 rounded-full bg-white border border-gray-300 shadow-sm active:bg-gray-200"
+            className="w-full h-16 rounded-full bg-background-0 border border-outline-200 shadow-sm active:bg-background-50"
             size="lg"
             onPress={() => promptAsync()}
             disabled={isLoading || !request}
           >
              {isLoading ? (
-               <ActivityIndicator color="#040415" />
+               <ActivityIndicator color={iconColor} />
              ) : (
                <Box className="flex-row items-center gap-3">
                  <GoogleLogo width={24} height={24} />
-                 <ButtonText className="font-semibold text-lg text-[#040415]">
-                    Entrar com Google
+                 <ButtonText className="font-semibold text-lg text-typography-900">
+                   Entrar com Google
                  </ButtonText>
                </Box>
              )}
-          </Button> */}
+          </Button> 
+          */}
         </Animated.View>
       </Box>
     </LinearGradient>
