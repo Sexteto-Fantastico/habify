@@ -10,7 +10,6 @@ import { isTokenExpired } from "@/lib/token";
 import { Alert, AlertIcon, AlertText } from "@/components/ui/alert";
 import { InfoIcon } from "@/components/ui/icon";
 import { STORAGE_KEY } from "@/constants/auth";
-import { User } from "@/lib/types";
 import { login } from "@/api/auth";
 
 interface SignInData {
@@ -61,7 +60,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
           <Alert action="info" variant="outline">
             <AlertIcon as={InfoIcon} />
-            <AlertText>Description of alert!</AlertText>
+            <AlertText>Seu token expirou. Por favor, faça login novamente.</AlertText>
           </Alert>;
         } else {
           setUser(userData);

@@ -6,8 +6,6 @@ import {
   Keyboard,
   Platform,
   Animated,
-  KeyboardAvoidingView,
-  ScrollView,
   ActivityIndicator,
 } from "react-native";
 import { Link, useRouter } from "expo-router";
@@ -103,7 +101,6 @@ export default function Login() {
 
     if (!isValid) {
       setErrors(newErrors);
-      // Pequena animação de "shake" ou feedback visual poderia ser adicionada aqui
       return;
     }
 
@@ -123,18 +120,18 @@ export default function Login() {
   };
 
   return (
-    <Box className="flex-1 bg-white px-6 py-8 justify-center">
-      <VStack space="xl" className="flex-1 justify-center">
+    <Box className="bg-background-0 px-6 py-8 justify-center">
+      <VStack space="xl" className="w-full">
         <Animated.View
           style={{
             opacity: fadeHeader,
             transform: [{ translateY: slideHeader }],
           }}
         >
-          <Text className="text-4xl font-bold text-[#040415] mb-2">
+          <Text className="text-4xl font-bold text-typography-950 mb-2">
             Bem-vindo de volta!
           </Text>
-          <Text className="text-gray-500 text-lg">
+          <Text className="text-typography-500 text-lg">
             Preencha seus dados para continuar.
           </Text>
         </Animated.View>
@@ -176,31 +173,33 @@ export default function Login() {
           }}
         >
           <Button
-            className={`w-full h-14 rounded-full ${isLoading ? "bg-gray-300" : "bg-[#3843FF]"}`}
+            className={`w-full h-14 rounded-full ${
+              isLoading ? "bg-background-300" : "bg-primary-500"
+            }`}
             size="lg"
             onPress={handleLogin}
             disabled={isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color="#151515" />
             ) : (
-              <ButtonText className="font-bold text-lg">Entrar</ButtonText>
+              <ButtonText className="text-white font-semibold text-lg">
+                Entrar
+              </ButtonText>
             )}
           </Button>
 
           <Box className="mt-6 flex-row justify-center items-center">
-            <Text className="text-gray-500 text-base mr-1">
+            <Text className="text-typography-500 text-base mr-1">
               Não tem uma conta?
             </Text>
             <Link href="/auth/register" asChild>
               <Pressable hitSlop={10}>
                 {({ pressed }) => (
                   <Text
-                    style={{
-                      color: pressed ? "#202899" : "#3843FF",
-                      fontWeight: "bold",
-                      fontSize: 16,
-                    }}
+                    className={`font-bold text-base ${
+                      pressed ? "text-primary-700" : "text-primary-500"
+                    }`}
                   >
                     Crie agora!
                   </Text>

@@ -61,11 +61,22 @@ export default function SplashScreen() {
             opacity: fadeAnim,
             transform: [{ scale: scaleAnim }],
             alignItems: "center",
+            padding: 20
           }}
         >
-          <HStack className="items-center space-x-3">
+          <HStack className="items-center space-x-3 p-2">
             <BookCheck size={80} color="#FFFFFF" />
-            <Text className="text-white text-6xl font-semibold">Habify</Text>
+            <Text 
+              className="text-white text-6xl font-semibold"
+              style={{ 
+                includeFontPadding: false,
+                textAlignVertical: 'center',
+                lineHeight: 80
+              }}
+              {...Platform.OS !== 'web' && { adjustsFontSizeToFit: true, numberOfLines: 1 }}
+            >
+              Habify
+            </Text>
           </HStack>
         </Animated.View>
       </Box>
