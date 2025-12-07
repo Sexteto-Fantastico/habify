@@ -33,8 +33,3 @@ export async function login(
   });
   return response.data;
 }
-
-export async function loginWithGoogle(token: string): Promise<LoginData> {
-  const response = await api.post(`${BASE_URL}/google`, { token });
-  return response.data;
-}
