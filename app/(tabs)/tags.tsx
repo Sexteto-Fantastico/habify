@@ -148,45 +148,45 @@ export default function TagsScreen() {
             <Text size="3xl">Minhas Tags</Text>
             {tags.length === 0 ? (
               <Card>
-              <View className="py-2">
-                <Text className="text-center text-muted-foreground">
-                Nenhuma tag criada ainda
-                </Text>
-              </View>
+                <View className="py-2">
+                  <Text className="text-center text-muted-foreground">
+                    Nenhuma tag criada ainda
+                  </Text>
+                </View>
               </Card>
             ) : (
               tags.map((tag) => (
-              <Card key={tag.id}>
-                <View className="flex-row items-center justify-between">
-                <View className="flex-row items-center gap-3">
-                  <View
-                  className="h-6 w-6 rounded-full"
-                  style={{ backgroundColor: tag.color }}
-                  />
-                  <Text>{tag.name}</Text>
-                </View>
-                <View className="flex-row items-center justify-between gap-4">
-                  <Button
-                  size="sm"
-                  variant="outline"
-                  onPress={() => startEditing(tag)}
-                  >
-                  <Icon as={EditIcon} size="sm" />
-                  </Button>
-                  <Button
-                  size="sm"
-                  variant="outline"
-                  onPress={() => handleDeleteTag(tag)}
-                  >
-                  <Icon
-                    as={TrashIcon}
-                    className="text-destructive"
-                    size="sm"
-                  />
-                  </Button>
-                </View>
-                </View>
-              </Card>
+                <Card key={tag.id}>
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center gap-3">
+                      <View
+                        className="h-6 w-6 rounded-full"
+                        style={{ backgroundColor: tag.color }}
+                      />
+                      <Text>{tag.name}</Text>
+                    </View>
+                    <View className="flex-row items-center justify-between gap-4">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onPress={() => startEditing(tag)}
+                      >
+                        <Icon as={EditIcon} size="sm" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onPress={() => handleDeleteTag(tag)}
+                      >
+                        <Icon
+                          as={TrashIcon}
+                          className="text-destructive"
+                          size="sm"
+                        />
+                      </Button>
+                    </View>
+                  </View>
+                </Card>
               ))
             )}
           </View>

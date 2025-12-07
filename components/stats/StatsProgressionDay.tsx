@@ -14,7 +14,6 @@ const StatsProgressionDay = ({
   habits,
   selectedDate,
 }: StatesProgressionDayProps) => {
-
   const isHabitCompletedForDate = (habit: Habit, targetDate: Date): boolean => {
     const targetDateString = targetDate.toISOString().split("T")[0];
 

@@ -60,7 +60,8 @@ export default function Register() {
       router.replace("/auth/login");
     } catch (error: any) {
       console.error("REGISTER - Erro:", error);
-      const errorMessage = error.response?.data?.message || "Erro ao registrar.";
+      const errorMessage =
+        error.response?.data?.message || "Erro ao registrar.";
       Alert.alert("Erro", errorMessage);
     } finally {
       setIsLoading(false);

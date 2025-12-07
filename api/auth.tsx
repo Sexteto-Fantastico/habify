@@ -9,13 +9,28 @@ export type LoginData = {
   avatar?: string;
 };
 
-export async function register(name: string, email: string, password: string): Promise<number> {
-  const response = await api.post(`${BASE_URL}/register`, { email, password, name });
+export async function register(
+  name: string,
+  email: string,
+  password: string,
+): Promise<number> {
+  const response = await api.post(`${BASE_URL}/register`, {
+    email,
+    password,
+    name,
+  });
   return response.data;
 }
 
-export async function login(email: string, password: string): Promise<LoginData> {
-  const response = await api.post(`${BASE_URL}/login`, { email, password, rememberMe: true });
+export async function login(
+  email: string,
+  password: string,
+): Promise<LoginData> {
+  const response = await api.post(`${BASE_URL}/login`, {
+    email,
+    password,
+    rememberMe: true,
+  });
   return response.data;
 }
 

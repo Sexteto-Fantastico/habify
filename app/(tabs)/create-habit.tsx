@@ -45,12 +45,11 @@ export default function CreateHabitScreen() {
         formData.name.trim(),
         formData.description.trim(),
         formData.frequency,
-        formData.selectedTagIds.map(String)
+        formData.selectedTagIds.map(String),
       );
 
       Alert.alert("Sucesso", "Hábito criado com sucesso!");
       router.push("/(tabs)/home");
-
     } catch (error) {
       console.error("Erro ao criar hábito:", error);
       Alert.alert("Erro", "Não foi possível criar o hábito");
@@ -89,7 +88,6 @@ export default function CreateHabitScreen() {
             submitLabel="Criar"
             tags={tags}
           />
-
         </View>
       </ScrollView>
     </>
