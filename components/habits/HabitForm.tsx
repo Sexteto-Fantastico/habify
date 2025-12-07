@@ -5,6 +5,7 @@ import { TagSelector } from "@/components/tags/TagSelector";
 import { HabitFrequency, Tag } from "@/lib/types";
 import { Text } from "@/components/ui/text";
 import { View, ScrollView } from "react-native";
+import { Card } from "../ui/card";
 
 export interface HabitFormData {
   name: string;
@@ -38,7 +39,7 @@ export function HabitForm({
 }: HabitFormProps) {
   return (
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-      <View className="gap-4">
+      <Card className="gap-4">
         <View className="gap-2">
           <Text>Nome *</Text>
           <Input>
@@ -102,7 +103,7 @@ export function HabitForm({
             <Text>{submitLabel}</Text>
           </Button>
         </View>
-      </View>
+      </Card>
     </ScrollView>
   );
 }

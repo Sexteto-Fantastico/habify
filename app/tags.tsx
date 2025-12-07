@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
@@ -15,6 +15,9 @@ import * as React from "react";
 import { View, ScrollView, Alert } from "react-native";
 import { getAllTags, createTag, updateTag, deleteTag } from "@/api/tag";
 import { TAGS_COLORS } from "@/constants/colors";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { VStack } from "@/components/ui/vstack";
+import { Heading } from "@/components/ui/heading";
 
 export default function TagsScreen() {
   const router = useRouter();
@@ -121,77 +124,83 @@ export default function TagsScreen() {
     <>
       <Stack.Screen
         options={{
-          title: "Tags",
-          headerLeft: () => (
-            <Button
-              size="sm"
-              variant="outline"
-              onPress={() => router.push("/(tabs)/home")}
-              className="mx-4"
-            >
-              <Icon as={ArrowLeftIcon} />
-            </Button>
-          ),
+          headerShown: false,
         }}
       />
-      <ScrollView className="flex-1 bg-background">
-        <View className="gap-4 p-4">
-          <TagForm
-            formData={formData}
-            onChange={setFormData}
-            onSubmit={editingTag ? handleUpdateTag : handleCreateTag}
-            onCancel={handleCancelForm}
-            editingTag={editingTag}
-          />
+      <SafeAreaView className="flex-1 bg-background-100">
+        <ScrollView className="pb-32 p-4">
+          <View
+            style={{ alignItems: "flex-start", marginTop: 16, marginLeft: 8 }}
+          >
+            <Button
+              variant="outline"
+              size="md"
+              className="rounded-full"
+              onPress={() => router.push("/(tabs)/create-habit")}
+            >
+              <Icon as={ArrowLeftIcon} size="md" />
+            </Button>
+          </View>
+          <VStack space="sm" className="px-4 py-4">
+            <Heading size="2xl">Criar Tag</Heading>
+            <Text className="text-typography-500">
+              Crie e gerencie suas tags para organizar seus hábitos!
+            </Text>
+          </VStack>
+          <View className="gap-6">
+            <TagForm
+              formData={formData}
+              onChange={setFormData}
+              onSubmit={editingTag ? handleUpdateTag : handleCreateTag}
+              onCancel={handleCancelForm}
+              editingTag={editingTag}
+            />
 
-          <View className="gap-3">
-            <Text size="3xl">Minhas Tags</Text>
-            {tags.length === 0 ? (
-              <Card>
-                <View className="py-2">
-                  <Text className="text-center text-muted-foreground">
-                    Nenhuma tag criada ainda
-                  </Text>
-                </View>
-              </Card>
-            ) : (
-              tags.map((tag) => (
-                <Card key={tag.id}>
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-row items-center gap-3">
-                      <View
-                        className="h-6 w-6 rounded-full"
-                        style={{ backgroundColor: tag.color }}
-                      />
-                      <Text>{tag.name}</Text>
-                    </View>
-                    <View className="flex-row items-center justify-between gap-4">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onPress={() => startEditing(tag)}
-                      >
-                        <Icon as={EditIcon} size="sm" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onPress={() => handleDeleteTag(tag)}
-                      >
-                        <Icon
-                          as={TrashIcon}
-                          className="text-destructive"
-                          size="sm"
-                        />
-                      </Button>
-                    </View>
+            <View className="gap-3">
+              <Text size="xl">Minhas Tags</Text>
+              {tags.length === 0 ? (
+                <Card>
+                  <View className="py-2">
+                    <Text className="text-center text-muted-foreground">
+                      Nenhuma tag criada ainda
+                    </Text>
                   </View>
                 </Card>
-              ))
-            )}
+              ) : (
+                tags.map((tag) => (
+                  <Card key={tag.id}>
+                    <View className="flex-row items-center justify-between">
+                      <View className="flex-row items-center gap-3">
+                        <View
+                          className="h-6 w-6 rounded-full"
+                          style={{ backgroundColor: tag.color }}
+                        />
+                        <Text>{tag.name}</Text>
+                      </View>
+                      <View className="flex-row items-center justify-between gap-4">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onPress={() => startEditing(tag)}
+                        >
+                          <Icon as={EditIcon} size="sm" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onPress={() => handleDeleteTag(tag)}
+                        >
+                          <Icon as={TrashIcon} size="sm" />
+                        </Button>
+                      </View>
+                    </View>
+                  </Card>
+                ))
+              )}
+            </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     </>
   );
 }

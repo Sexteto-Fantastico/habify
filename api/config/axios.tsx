@@ -11,13 +11,13 @@ import Constants from "expo-constants";
 
 const debuggerHost = Constants.expoConfig?.hostUri;
 const localhost = debuggerHost?.split(":")[0];
+let API_BASE_URL = '';
+
+API_BASE_URL = `http://${localhost}:3001/api`;
 
 if (!localhost) {
-  throw new Error(
-    "Localhost IP não encontrado. Verifique se está rodando no Expo Go.",
-  );
+  API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3001/api';
 }
-const API_BASE_URL = `http://${localhost}:3001/api`;
 
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,

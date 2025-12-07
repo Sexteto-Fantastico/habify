@@ -11,7 +11,8 @@ import {
   FormControlLabelText,
 } from "@/components/ui/form-control";
 import { AlertCircleIcon } from "@/components/ui/icon";
-import { Input, InputField } from "@/components/ui/input";
+import { Input, InputField, InputSlot, InputIcon } from "@/components/ui/input";
+import { EyeIcon, EyeOffIcon } from "lucide-react-native";
 
 interface AuthFormProps {
   label: string;
@@ -38,33 +39,39 @@ export function AuthForm({
   autoCapitalize = "sentences",
 }: AuthFormProps) {
   const [isFocused, setIsFocused] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  
   const isInvalid = !!errorMessage;
 
-  const getBorderColor = () => {
-    if (isInvalid) return "#EF4444";
-    if (isFocused) return "#3BA935";
-    return "#D1D5DB";
-  };
+  let borderColorClass = "border-outline-300";
+  
+  if (isInvalid) {
+    borderColorClass = "border-error-500";
+  } else if (isFocused) {
+    borderColorClass = "border-success-500"; 
+  }
 
-  const baseStyle =
-    "px-0 bg-transparent border-t-0 border-x-0 border-b rounded-none h-12";
+  const baseInputStyle = "px-0 bg-transparent border-t-0 border-x-0 border-b rounded-none h-12";
+
+  const handleTogglePassword = () => {
+    setShowPassword((prev) => !prev);
+  };
 
   return (
     <FormControl isInvalid={isInvalid} size="md" className="mb-6">
       <FormControlLabel>
-        <FormControlLabelText className="uppercase font-semibold text-sm">
+        <FormControlLabelText className="text-typography-700 uppercase font-semibold text-sm">
           {label}
         </FormControlLabelText>
       </FormControlLabel>
 
       <Input
-        className={baseStyle}
+        className={`${baseInputStyle} ${borderColorClass}`}
         size="lg"
-        style={{ borderColor: getBorderColor() }}
       >
         <InputField
-          className="px-0 leading-none placeholder:text-gray-400"
-          type={type}
+          className="px-0 leading-none text-typography-900"
+          type={type === "password" && showPassword ? "text" : type}
           placeholder={placeholder}
           value={value}
           onChangeText={onChangeText}
@@ -73,19 +80,28 @@ export function AuthForm({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
         />
+        
+        {type === "password" && (
+          <InputSlot className="pr-3" onPress={handleTogglePassword}>
+            <InputIcon
+              as={showPassword ? EyeIcon : EyeOffIcon}
+              className="text-typography-500"
+            />
+          </InputSlot>
+        )}
       </Input>
 
       {!isInvalid && helperText && (
         <FormControlHelper className="mt-2">
-          <FormControlHelperText className="text-gray-500 text-xs">
+          <FormControlHelperText className="text-typography-500 text-xs">
             {helperText}
           </FormControlHelperText>
         </FormControlHelper>
       )}
 
       <FormControlError className="mt-2">
-        <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
-        <FormControlErrorText className="text-red-500 ml-2">
+        <FormControlErrorIcon as={AlertCircleIcon} className="text-error-500" />
+        <FormControlErrorText className="text-error-500 ml-2">
           {errorMessage}
         </FormControlErrorText>
       </FormControlError>

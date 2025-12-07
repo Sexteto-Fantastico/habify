@@ -2,7 +2,10 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Tag } from "@/lib/types";
 import { useRouter } from "expo-router";
-import { View, Pressable } from "react-native";
+
+import { Pressable } from "../ui/pressable";
+import { Box } from "../ui/box";
+import { cn } from "@/lib/utils";
 
 interface TagSelectorProps {
   tags: Tag[];
@@ -20,50 +23,46 @@ export function TagSelector({
 
   if (tags.length === 0) {
     return (
-      <View className="rounded-md border border-dashed border-border p-4">
+      <Box className="rounded-md border border-dashed border-border p-4">
         <Text className="text-center">Nenhuma tag disponível</Text>
-        <Text
-          className="text-center text-sm text-primary underline"
-          onPress={() => router.push("/(tabs)/tags")}
-        >
-          Crie sua primeira tag
-        </Text>
-      </View>
+        <Button variant="link" size="sm" onPress={() => router.push("/tags")}>
+          <ButtonText size="sm">Crie sua primeira</ButtonText>
+        </Button>
+      </Box>
     );
   }
 
   return (
-    <View className="gap-2">
-      <View className="flex-row items-center justify-between">
+    <Box>
+      <Box className="flex-row items-center justify-between">
         <Text size="sm">Tags</Text>
-        <Button variant="link" size="sm">
+        <Button variant="link" size="sm" onPress={() => router.push("/tags")}>
           <ButtonText size="sm">Gerenciar tags</ButtonText>
         </Button>
-      </View>
-      <View className="flex-row flex-wrap gap-2">
+      </Box>
+      <Box className="flex-row flex-wrap gap-2">
         {tags.map((tag) => {
           const isSelected = selectedTagIds.includes(tag.id);
           return (
             <Pressable
               key={tag.id}
               onPress={() => onToggle(tag.id)}
-              className={`rounded-full border-2 px-3 py-1.5 ${
-                isSelected
-                  ? "border-foreground bg-muted"
-                  : "border-border bg-background"
-              }`}
+              className={cn(
+                "rounded-full border-2 px-3 py-1.5",
+                isSelected ? "border-primary-500" : "border-border",
+              )}
             >
-              <View className="flex-row items-center gap-2">
-                <View
+              <Box className="flex-row items-center gap-2">
+                <Box
                   className="h-3 w-3 rounded-full"
                   style={{ backgroundColor: tag.color }}
                 />
                 <Text size="sm">{tag.name}</Text>
-              </View>
+              </Box>
             </Pressable>
           );
         })}
-      </View>
-    </View>
+      </Box>
+    </Box>
   );
 }
