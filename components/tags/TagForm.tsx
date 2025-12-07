@@ -4,6 +4,7 @@ import { Text } from "@/components/ui/text";
 import { TAGS_COLORS } from "@/constants/colors";
 import { Tag } from "@/lib/types";
 import { View, Pressable, ScrollView } from "react-native";
+import { Card } from "../ui/card";
 
 interface TagFormData {
   name: string;
@@ -27,11 +28,14 @@ export function TagForm({
 }: TagFormProps) {
   return (
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-      <View className="gap-4">
+      <Card className="gap-4">
         <View className="gap-2">
           <Text size="sm">Nome *</Text>
           <Input>
-            <InputField value={formData.name} />
+            <InputField
+              value={formData.name}
+              onChangeText={(name) => onChange({ ...formData, name: name })}
+            />
           </Input>
         </View>
         <View className="gap-2">
@@ -59,7 +63,7 @@ export function TagForm({
             <Text>{editingTag ? "Salvar" : "Criar"}</Text>
           </Button>
         </View>
-      </View>
+      </Card>
     </ScrollView>
   );
 }

@@ -8,6 +8,10 @@ import { getAllTags } from "@/api/tag";
 import { createHabit } from "@/api/habit";
 import { HabitForm, HabitFormData } from "@/components/habits/HabitForm";
 import { Tag } from "@/lib/types";
+import { VStack } from "@/components/ui/vstack";
+import { Heading } from "@/components/ui/heading";
+import { Text } from "@/components/ui/text";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function CreateHabitScreen() {
   const router = useRouter();
@@ -45,12 +49,11 @@ export default function CreateHabitScreen() {
         formData.name.trim(),
         formData.description.trim(),
         formData.frequency,
-        formData.selectedTagIds.map(String)
+        formData.selectedTagIds.map(String),
       );
 
       Alert.alert("Sucesso", "Hábito criado com sucesso!");
       router.push("/(tabs)/home");
-
     } catch (error) {
       console.error("Erro ao criar hábito:", error);
       Alert.alert("Erro", "Não foi possível criar o hábito");
@@ -62,25 +65,15 @@ export default function CreateHabitScreen() {
   };
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          title: "Criar Hábito",
-          headerLeft: () => (
-            <Button
-              size="sm"
-              variant="outline"
-              onPress={() => router.push("/(tabs)/home")}
-              className="mx-4"
-            >
-              <Icon as={ArrowLeftIcon} />
-            </Button>
-          ),
-        }}
-      />
-
-      <ScrollView className="flex-1 bg-background">
-        <View className="gap-6 p-4">
+    <SafeAreaView className="flex-1 bg-background-100">
+      <ScrollView className="pb-32 p-4">
+        <VStack space="sm" className="px-4 py-4">
+          <Heading size="2xl">Criar Hábito</Heading>
+          <Text className="text-typography-500">
+            Crie novos hábitos para uma vida mais saudável!
+          </Text>
+        </VStack>
+        <View className="gap-6">
           <HabitForm
             formData={formData}
             onChange={setFormData}
@@ -89,9 +82,8 @@ export default function CreateHabitScreen() {
             submitLabel="Criar"
             tags={tags}
           />
-
         </View>
       </ScrollView>
-    </>
+    </SafeAreaView>
   );
 }
