@@ -10,12 +10,11 @@ import { STORAGE_KEY } from "@/constants/auth";
 import Constants from "expo-constants";
 
 const debuggerHost = Constants.expoConfig?.hostUri;
-const localhost = debuggerHost?.split(":")[0];
+const localhost =  `10.0.2.2`; //debuggerHost?.split(":")[0];
 
 if (!localhost) {
   throw new Error("Localhost IP não encontrado. Verifique se está rodando no Expo Go.");
 }
-
 const API_BASE_URL = `http://${localhost}:3001/api`;
 
 const api: AxiosInstance = axios.create({

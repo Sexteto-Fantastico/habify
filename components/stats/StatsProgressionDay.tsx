@@ -14,7 +14,7 @@ const StatsProgressionDay = ({
   habits,
   selectedDate,
 }: StatesProgressionDayProps) => {
-  // Função auxiliar para verificar se um hábito foi completado na data selecionada
+
   const isHabitCompletedForDate = (habit: Habit, targetDate: Date): boolean => {
     const targetDateString = targetDate.toISOString().split("T")[0];
 
@@ -53,7 +53,7 @@ const StatsProgressionDay = ({
 
       <Text className="text-success-500 text-sm mt-2 font-medium">
         {progress === 100
-          ? "Todos os hábitos concluídos! 🎉"
+          ? "Todos os hábitos concluídos! "
           : `${Math.round(progress)}% concluído`}
       </Text>
     </Card>
