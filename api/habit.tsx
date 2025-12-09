@@ -13,7 +13,13 @@ export async function createHabit(
   frequency: HabitFrequency,
   tags: string[] = [],
 ): Promise<number> {
-  return 1;
+  const response = await api.post("/habits", {
+    name,
+    description,
+    frequency,
+    tags,
+  });
+  return response.data.id;
 }
 
 export async function getAllHabits(startDate?: string, endDate?: string): Promise<Habit[]> {
@@ -43,6 +49,13 @@ export async function getHabits(habitFilter: HabitFilter): Promise<Habit[]> {
   const response = await api.get(
     `/habits/${habitFilter.createdDate.toISOString().split("T")[0]}`,
   );
+
+  const dados = response.data?.map( (habit: Habit) => habit.completions?.map((c: HabitCompletion) => ({
+    ...c,
+    completed: true
+  })));
+
+  console.log("Data: ",dados);
   return response.data;
 }
 

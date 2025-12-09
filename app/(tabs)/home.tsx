@@ -42,6 +42,7 @@ export default function HomeScreen() {
   const loadFilteredHabits = async () => {
     try {
       const habitsFiltered = await getHabits({ createdDate: selectedDate });
+
       setHabits(habitsFiltered);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
@@ -110,6 +111,7 @@ export default function HomeScreen() {
                   key={habit.id}
                   habit={habit}
                   onToggleCompletion={handleToggleCompletion}
+                  date={selectedDate}
                 />
               ))}
             </VStack>

@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
@@ -10,6 +9,12 @@ import {
   TrendingUpIcon,
   CalendarIcon,
   BarChart3Icon,
+  XIcon,
+  CheckCircleIcon,
+  TargetIcon,
+  BarChartIcon,
+  ActivityIcon,
+  GitCompareIcon,
 } from "lucide-react-native";
 import { Stack, useRouter } from "expo-router";
 import * as React from "react";
@@ -17,101 +22,158 @@ import {
   View,
   ScrollView,
   Alert,
-  Dimensions,
   useWindowDimensions,
+  Modal,
+  TouchableOpacity,
+  ActivityIndicator,
+  Platform,
+  RefreshControl,
 } from "react-native";
-import { getAllHabits, getHabitCompletions } from "@/api/habit";
+import { getAllHabits } from "@/api/habit";
 import { getHabitStats } from "@/api/stat";
 import { getAllTags } from "@/api/tag";
-import { FrequencyLabel } from "@/constants/frequency-labels";
 import { StatsFilters } from "@/components/stats/StatsFilters";
 import { StatsCard } from "@/components/stats/StatsCard";
-import { LineChart, BarChart, ProgressChart } from "react-native-chart-kit";
+import { LineChart, BarChart } from "react-native-chart-kit";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Box } from "@/components/ui/box";
+import { Heading } from "@/components/ui/heading";
+import { HStack } from "@/components/ui/hstack";
+import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
+import { VStack } from "@/components/ui/vstack";
 
-// Tipos para os dados do gráfico
 interface ChartData {
   labels: string[];
   datasets: {
     data: number[];
-    color?: () => string;
+    color?: (opacity: number) => string;
     strokeWidth?: number;
   }[];
+}
+
+interface HabitWithCompletions extends Habit {
+  completions: any[];
+  completionRate: number;
+}
+
+interface Filters {
+  frequency?: HabitFrequency;
+  startDate?: string;
+  endDate?: string;
+  tags?: string[];
 }
 
 export default function StatsScreen() {
   const router = useRouter();
   const { width: screenWidth } = useWindowDimensions();
+
   const [stats, setStats] = React.useState({
     total: 0,
     completed: 0,
     pending: 0,
     notCompleted: 0,
     longestStreak: 0,
+    completionRate: 0,
+    dailyCompletionRate: 0,
+    weeklyCompletionRate: 0,
+    monthlyCompletionRate: 0,
+    bestDay: { date: "", rate: 0 },
+    worstDay: { date: "", rate: 100 },
   });
-  const [habits, setHabits] = React.useState<Habit[]>([]);
+
+  const [habits, setHabits] = React.useState<HabitWithCompletions[]>([]);
   const [allTags, setAllTags] = React.useState<Tag[]>([]);
   const [showFilters, setShowFilters] = React.useState(false);
-  const [filters, setFilters] = React.useState<{
-    frequency?: HabitFrequency;
-    startDate?: string;
-    endDate?: string;
-    tags?: string[];
-  }>({});
+  const [filters, setFilters] = React.useState<Filters>({});
+  const [loading, setLoading] = React.useState(true);
+  const [refreshing, setRefreshing] = React.useState(false);
 
-  // Novos estados para gráficos
   const [activityChartData, setActivityChartData] = React.useState<ChartData>({
     labels: [],
     datasets: [{ data: [] }],
   });
-  const [weeklyChartData, setWeeklyChartData] = React.useState<ChartData>({
-    labels: [],
-    datasets: [{ data: [] }],
-  });
-  const [completionChartData, setCompletionChartData] = React.useState({
-    labels: ["Concluídos", "Pendentes"],
-    data: [0, 0],
-    colors: ["#34C759", "#FF9500"],
-  });
 
-  React.useEffect(() => {
-    loadStats();
-  }, [filters]);
+  const [frequencyChartData, setFrequencyChartData] = React.useState<ChartData>(
+    {
+      labels: ["Diário", "Semanal", "Mensal"],
+      datasets: [{ data: [0, 0, 0] }],
+    },
+  );
 
-  React.useEffect(() => {
-    loadTags();
-  }, []);
+  const [comparisonChartData, setComparisonChartData] =
+    React.useState<ChartData>({
+      labels: ["Diário", "Semanal", "Mensal"],
+      datasets: [{ data: [0, 0, 0] }],
+    });
 
-  const loadTags = async () => {
+  const [activitiesComparisonChartData, setActivitiesComparisonChartData] =
+    React.useState<ChartData>({
+      labels: [],
+      datasets: [
+        { data: [], color: () => "rgba(0, 122, 255, 1)", strokeWidth: 2 },
+        { data: [], color: () => "rgba(52, 199, 89, 1)", strokeWidth: 2 },
+        { data: [], color: () => "rgba(255, 149, 0, 1)", strokeWidth: 2 },
+      ],
+    });
+
+  const [dailyHabits, setDailyHabits] = React.useState<HabitWithCompletions[]>(
+    [],
+  );
+  const [weeklyHabits, setWeeklyHabits] = React.useState<
+    HabitWithCompletions[]
+  >([]);
+  const [monthlyHabits, setMonthlyHabits] = React.useState<
+    HabitWithCompletions[]
+  >([]);
+
+  const getCompletionDateString = (c: any): string | null => {
+    if (!c) return null;
+
+    const dateValue = c.date || c.completedAt || c.createdAt;
+    if (!dateValue) return null;
+
     try {
-      const tags = await getAllTags();
-      setAllTags(tags);
-    } catch (error) {
-      console.error("Erro ao carregar tags:", error);
+      const d = typeof dateValue === "string" ? new Date(dateValue) : dateValue;
+      if (isNaN(d.getTime())) return null;
+      return d.toISOString().split("T")[0];
+    } catch {
+      return null;
     }
   };
 
-  // Função para calcular a maior streak
-  const calculateLongestStreak = (habitsWithCompletions: any[]) => {
+  const wasHabitCompletedOnDate = (habit: Habit, dateStr: string): boolean => {
+    if (!habit.completions || !Array.isArray(habit.completions)) return false;
+
+    return habit.completions.some((completion) => {
+      const completionDate = getCompletionDateString(completion);
+      return completionDate === dateStr;
+    });
+  };
+
+  const calculateLongestStreak = (
+    habitsWithCompletions: HabitWithCompletions[],
+  ): number => {
     let longestStreak = 0;
 
     habitsWithCompletions.forEach((habit) => {
-      const completions = habit.completions
-        .filter((c: any) => c.completed)
-        .map((c: any) => new Date(c.date))
-        .sort((a: Date, b: Date) => a.getTime() - b.getTime());
+      const completionDates = habit.completions
+        ?.map((c) => getCompletionDateString(c))
+        .filter((date): date is string => date !== null)
+        .map((date) => new Date(date))
+        .filter((date) => !isNaN(date.getTime()))
+        .sort((a, b) => a.getTime() - b.getTime());
 
-      if (completions.length === 0) return;
+      if (!completionDates || completionDates.length === 0) return;
 
       let currentStreak = 1;
       let maxStreak = 1;
 
-      for (let i = 1; i < completions.length; i++) {
-        const prevDate = completions[i - 1];
-        const currentDate = completions[i];
+      for (let i = 1; i < completionDates.length; i++) {
+        const prevDate = completionDates[i - 1];
+        const currentDate = completionDates[i];
 
         const diffTime = currentDate.getTime() - prevDate.getTime();
-        const diffDays = diffTime / (1000 * 60 * 60 * 24);
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
         if (diffDays === 1) {
           currentStreak++;
@@ -127,117 +189,46 @@ export default function StatsScreen() {
     return longestStreak;
   };
 
-  // Função para gerar dados do gráfico de atividades - versão mobile otimizada
-  const generateActivityChartData = (habitsWithCompletions: any[]) => {
-    const last15Days = Array.from({ length: 15 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (14 - i));
-      return date.toISOString().split("T")[0];
-    });
+  const calculateCompletionStats = (habitsList: Habit[]) => {
+    if (habitsList.length === 0) return { total: 0, completed: 0, rate: 0 };
 
-    const dailyCompletions = last15Days.map((date) => {
-      return habitsWithCompletions.reduce((total, habit) => {
-        const hasCompletion = habit.completions.some(
-          (c: any) => c.completed && c.date === date,
-        );
-        return total + (hasCompletion ? 1 : 0);
-      }, 0);
-    });
+    let totalOpportunities = 0;
+    let completedCount = 0;
 
-    // Labels otimizados para mobile - mostrar menos informações
-    const labels = last15Days.map((date, index) => {
-      if (index % 3 === 0) {
-        // Mostrar apenas a cada 3 dias
-        const d = new Date(date);
-        return `${d.getDate()}/${d.getMonth() + 1}`;
+    habitsList.forEach((habit) => {
+      if (habit.completions && Array.isArray(habit.completions)) {
+        totalOpportunities += 1;
+        completedCount += habit.completions.length > 0 ? 1 : 0;
       }
-      return "";
     });
 
-    return {
-      labels,
-      datasets: [
-        {
-          data: dailyCompletions,
-          color: () => "#007AFF",
-          strokeWidth: 3, // Mais espesso para mobile
-        },
-      ],
-    };
+    const rate =
+      habitsList.length > 0
+        ? Math.round((completedCount / habitsList.length) * 100)
+        : 0;
+
+    return { total: habitsList.length, completed: completedCount, rate };
   };
 
-  // Função para gerar dados do gráfico semanal - versão mobile otimizada
-  const generateWeeklyChartData = (habitsWithCompletions: any[]) => {
-    const daysOfWeek = ["D", "S", "T", "Q", "Q", "S", "S"]; // Abreviado para mobile
-    const weeklyCompletions = Array(7).fill(0);
-
-    habitsWithCompletions.forEach((habit) => {
-      habit.completions.forEach((completion: any) => {
-        if (completion.completed) {
-          const date = new Date(completion.date);
-          const dayOfWeek = date.getDay();
-          weeklyCompletions[dayOfWeek]++;
-        }
-      });
-    });
-
-    return {
-      labels: daysOfWeek,
-      datasets: [
-        {
-          data: weeklyCompletions,
-          color: () => "#34C759",
-        },
-      ],
-    };
-  };
-
-  // Função para gerar dados do gráfico de progresso
-  const generateCompletionChartData = (stats: any) => {
-    const total = stats.total || 1; // Evitar divisão por zero
-    const completedRate = stats.completed / total;
-    const pendingRate = stats.pending / total;
-
-    return {
-      labels: ["Concluídos", "Pendentes"],
-      data: [completedRate, pendingRate],
-      colors: ["#34C759", "#FF9500"],
-    };
-  };
-
-  const loadStats = async () => {
+  const loadData = React.useCallback(async () => {
     try {
-      const habitStats = await getHabitStats(
-        filters.frequency,
-        filters.startDate,
-        filters.endDate,
-        filters.tags,
+      setLoading(true);
+
+      const tagsData = await getAllTags();
+      setAllTags(tagsData || []);
+
+      const allHabits = await getAllHabits();
+
+      const dailyHabitsList = allHabits.filter((h) => h.frequency === "daily");
+      const weeklyHabitsList = allHabits.filter(
+        (h) => h.frequency === "weekly",
+      );
+      const monthlyHabitsList = allHabits.filter(
+        (h) => h.frequency === "monthly",
       );
 
-      const habitsWithTags = await getAllHabits();
-      const habitsWithCompletions = await Promise.all(
-        habitsWithTags.map(async (habit) => {
-          const completions = await getHabitCompletions(
-            habit.id,
-            filters.startDate,
-            filters.endDate,
-          );
-          return { ...habit, completions };
-        }),
-      );
+      let filteredHabits = [...allHabits];
 
-      // Calcula a maior streak
-      const longestStreak = calculateLongestStreak(habitsWithCompletions);
-
-      // Gera dados dos gráficos
-      const activityData = generateActivityChartData(habitsWithCompletions);
-      const weeklyData = generateWeeklyChartData(habitsWithCompletions);
-      const completionData = generateCompletionChartData({
-        ...habitStats,
-        total: habitsWithCompletions.length,
-      });
-
-      let filteredHabits = habitsWithCompletions;
       if (filters.frequency) {
         filteredHabits = filteredHabits.filter(
           (h) => h.frequency === filters.frequency,
@@ -246,28 +237,296 @@ export default function StatsScreen() {
 
       if (filters.tags && filters.tags.length > 0) {
         filteredHabits = filteredHabits.filter((habit) => {
-          const habitTagNames = habit.tags.map((t: Tag) => t.name);
-          return filters.tags!.some((tag) => habitTagNames.includes(tag));
+          const habitTagNames = habit.tags?.map((t) => t.name) || [];
+          return filters.tags!.some((tagName) =>
+            habitTagNames.includes(tagName),
+          );
         });
       }
 
-      setStats({
-        ...habitStats,
-        longestStreak,
+      const habitsWithCompletions = filteredHabits.map((habit) => {
+        const completions = habit.completions || [];
+        const completionRate =
+          completions.length > 0
+            ? Math.min(Math.round((completions.length / 30) * 100), 100)
+            : 0;
+
+        return {
+          ...habit,
+          completions,
+          completionRate,
+        };
       });
-      setHabits(filteredHabits);
-      setActivityChartData(activityData);
-      setWeeklyChartData(weeklyData);
-      setCompletionChartData(completionData);
+
+      const dailyStats = calculateCompletionStats(dailyHabitsList);
+      const weeklyStats = calculateCompletionStats(weeklyHabitsList);
+      const monthlyStats = calculateCompletionStats(monthlyHabitsList);
+      const allStats = calculateCompletionStats(filteredHabits);
+
+      const longestStreak = calculateLongestStreak(habitsWithCompletions);
+      const dailyActivityStats = calculateDailyActivityStats(
+        habitsWithCompletions,
+      );
+
+      setStats({
+        total: allStats.total,
+        completed: allStats.completed,
+        pending: 0,
+        notCompleted: allStats.total - allStats.completed,
+        longestStreak,
+        completionRate: allStats.rate,
+        dailyCompletionRate: dailyStats.rate,
+        weeklyCompletionRate: weeklyStats.rate,
+        monthlyCompletionRate: monthlyStats.rate,
+        bestDay: dailyActivityStats.bestDay,
+        worstDay: dailyActivityStats.worstDay,
+      });
+
+      setHabits(habitsWithCompletions);
+      setDailyHabits(
+        dailyHabitsList.map((h) => ({
+          ...h,
+          completions: h.completions || [],
+          completionRate: calculateCompletionStats([h]).rate,
+        })),
+      );
+      setWeeklyHabits(
+        weeklyHabitsList.map((h) => ({
+          ...h,
+          completions: h.completions || [],
+          completionRate: calculateCompletionStats([h]).rate,
+        })),
+      );
+      setMonthlyHabits(
+        monthlyHabitsList.map((h) => ({
+          ...h,
+          completions: h.completions || [],
+          completionRate: calculateCompletionStats([h]).rate,
+        })),
+      );
+
+      generateChartData(
+        habitsWithCompletions,
+        dailyHabitsList,
+        weeklyHabitsList,
+        monthlyHabitsList,
+      );
     } catch (error) {
-      console.error("Erro ao carregar estatísticas:", error);
       Alert.alert("Erro", "Não foi possível carregar as estatísticas");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
+  }, [filters]);
+
+  const calculateDailyActivityStats = (
+    habitsWithCompletions: HabitWithCompletions[],
+  ) => {
+    const activitiesMap: Record<string, { completed: number; total: number }> =
+      {};
+
+    const last30Days = Array.from({ length: 30 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (29 - i));
+      return date.toISOString().split("T")[0];
+    });
+
+    last30Days.forEach((date) => {
+      activitiesMap[date] = { completed: 0, total: 0 };
+    });
+
+    habitsWithCompletions.forEach((habit) => {
+      last30Days.forEach((date) => {
+        activitiesMap[date].total++;
+
+        if (wasHabitCompletedOnDate(habit, date)) {
+          activitiesMap[date].completed++;
+        }
+      });
+    });
+
+    const activities = last30Days.map((date) => {
+      const data = activitiesMap[date];
+      const successRate =
+        data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0;
+
+      return {
+        date,
+        completed: data.completed,
+        total: data.total,
+        successRate,
+      };
+    });
+
+    let bestDay = { date: "", rate: 0 };
+    let worstDay = { date: "", rate: 100 };
+
+    activities.forEach((activity) => {
+      if (activity.total > 0) {
+        if (activity.successRate > bestDay.rate) {
+          bestDay = { date: activity.date, rate: activity.successRate };
+        }
+        if (activity.successRate < worstDay.rate) {
+          worstDay = { date: activity.date, rate: activity.successRate };
+        }
+      }
+    });
+
+    return { activities, bestDay, worstDay };
   };
 
-  const handleApplyFilters = () => {
+  const generateChartData = (
+    allHabits: HabitWithCompletions[],
+    dailyHabits: Habit[],
+    weeklyHabits: Habit[],
+    monthlyHabits: Habit[],
+  ) => {
+    const last15Days = Array.from({ length: 15 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (14 - i));
+      return date.toISOString().split("T")[0];
+    });
+
+    const dailyCompletions = last15Days.map((date) => {
+      return allHabits.reduce((total: number, habit: HabitWithCompletions) => {
+        if (wasHabitCompletedOnDate(habit, date)) {
+          return total + 1;
+        }
+        return total;
+      }, 0);
+    });
+
+    const labels = last15Days.map((date, index) => {
+      if (index % 3 === 0 || index === 14) {
+        const d = new Date(date);
+        return `${d.getDate()}/${d.getMonth() + 1}`;
+      }
+      return "";
+    });
+
+    setActivityChartData({
+      labels,
+      datasets: [
+        {
+          data: dailyCompletions,
+          color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+          strokeWidth: 3,
+        },
+      ],
+    });
+
+    const dailyCompleted = dailyHabits.reduce(
+      (sum: number, habit: Habit) => sum + (habit.completions || []).length,
+      0,
+    );
+    const weeklyCompleted = weeklyHabits.reduce(
+      (sum: number, habit: Habit) => sum + (habit.completions || []).length,
+      0,
+    );
+    const monthlyCompleted = monthlyHabits.reduce(
+      (sum: number, habit: Habit) => sum + (habit.completions || []).length,
+      0,
+    );
+
+    setFrequencyChartData({
+      labels: ["Diário", "Semanal", "Mensal"],
+      datasets: [
+        {
+          data: [dailyCompleted, weeklyCompleted, monthlyCompleted],
+          color: (opacity = 1) => `rgba(52, 199, 89, ${opacity})`,
+          strokeWidth: 2,
+        },
+      ],
+    });
+
+    const dailyStats = calculateCompletionStats(dailyHabits);
+    const weeklyStats = calculateCompletionStats(weeklyHabits);
+    const monthlyStats = calculateCompletionStats(monthlyHabits);
+
+    setComparisonChartData({
+      labels: ["Diário", "Semanal", "Mensal"],
+      datasets: [
+        {
+          data: [dailyStats.rate, weeklyStats.rate, monthlyStats.rate],
+          color: (opacity = 1) => `rgba(255, 149, 0, ${opacity})`,
+          strokeWidth: 2,
+        },
+      ],
+    });
+
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (6 - i));
+      return date;
+    });
+
+    const comparisonLabels = last7Days.map((date, index) => {
+      const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+      return dayNames[date.getDay()];
+    });
+
+    const dailyData = last7Days.map((date) => {
+      const dateStr = date.toISOString().split("T")[0];
+      return dailyHabits.reduce(
+        (total: number, habit: Habit) =>
+          total + (wasHabitCompletedOnDate(habit, dateStr) ? 1 : 0),
+        0,
+      );
+    });
+
+    const weeklyData = last7Days.map((date) => {
+      const dateStr = date.toISOString().split("T")[0];
+      return weeklyHabits.reduce(
+        (total: number, habit: Habit) =>
+          total + (wasHabitCompletedOnDate(habit, dateStr) ? 1 : 0),
+        0,
+      );
+    });
+
+    const monthlyData = last7Days.map((date) => {
+      const dateStr = date.toISOString().split("T")[0];
+      return monthlyHabits.reduce(
+        (total: number, habit: Habit) =>
+          total + (wasHabitCompletedOnDate(habit, dateStr) ? 1 : 0),
+        0,
+      );
+    });
+
+    setActivitiesComparisonChartData({
+      labels: comparisonLabels,
+      datasets: [
+        {
+          data: dailyData,
+          color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+          strokeWidth: 3,
+        },
+        {
+          data: weeklyData,
+          color: (opacity = 1) => `rgba(52, 199, 89, ${opacity})`,
+          strokeWidth: 3,
+        },
+        {
+          data: monthlyData,
+          color: (opacity = 1) => `rgba(255, 149, 0, ${opacity})`,
+          strokeWidth: 3,
+        },
+      ],
+    });
+  };
+
+  React.useEffect(() => {
+    loadData();
+  }, []);
+
+  React.useEffect(() => {
+    if (!loading) {
+      loadData();
+    }
+  }, [filters]);
+
+  const handleApplyFilters = (newFilters: Filters) => {
+    setFilters(newFilters);
     setShowFilters(false);
-    loadStats();
   };
 
   const handleClearFilters = () => {
@@ -275,24 +534,17 @@ export default function StatsScreen() {
     setShowFilters(false);
   };
 
-  const getCompletionRate = (habit: Habit) => {
-    if (habit.completions.length === 0) return 0;
-    const completed = habit.completions.filter((c) => c.completed).length;
-    return Math.round((completed / habit.completions.length) * 100);
+  const handleRefresh = () => {
+    setRefreshing(true);
+    loadData();
   };
 
-  const getFilterDescription = () => {
-    const parts: string[] = [];
-    if (filters.frequency)
-      parts.push(`Filtrado por: ${FrequencyLabel[filters.frequency]}`);
-    if (filters.startDate && filters.endDate)
-      parts.push(`${filters.startDate} a ${filters.endDate}`);
-    if (filters.tags && filters.tags.length > 0)
-      parts.push(`Tags: ${filters.tags.join(", ")}`);
-    return parts.join(" | ");
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "N/A";
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("pt-BR");
   };
 
-  // Configurações dos gráficos otimizadas para mobile
   const chartConfig = {
     backgroundColor: "#ffffff",
     backgroundGradientFrom: "#ffffff",
@@ -300,149 +552,297 @@ export default function StatsScreen() {
     decimalPlaces: 0,
     color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
     labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-    style: {
-      borderRadius: 16,
-    },
+    style: { borderRadius: 16 },
     propsForDots: {
       r: "4",
       strokeWidth: "2",
       stroke: "#007AFF",
     },
-    // Configurações específicas para mobile
-    propsForLabels: {
-      fontSize: 10,
-    },
+    propsForLabels: { fontSize: 10 },
     fillShadowGradientFrom: "#007AFF",
     fillShadowGradientTo: "rgba(0, 122, 255, 0.1)",
   };
 
-  // Dimensões responsivas
-  const chartWidth = screenWidth - 32; // 16px de padding em cada lado
-  const chartHeight = 200; // Altura fixa para mobile
+  const chartWidth = Math.min(screenWidth - 32, 400);
+  const chartHeight = 180;
+
+  const hasActivityData =
+    activityChartData.datasets[0]?.data?.some((val) => val > 0) || false;
+  const hasFrequencyData =
+    frequencyChartData.datasets[0]?.data?.some((val) => val > 0) || false;
+  const hasComparisonData =
+    comparisonChartData.datasets[0]?.data?.some((val) => val > 0) || false;
+  const hasActivitiesComparisonData =
+    activitiesComparisonChartData.datasets.some((dataset) =>
+      dataset.data?.some((val) => val > 0),
+    );
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          title: "Estatísticas",
-          headerLeft: () => (
-            <Button
-              size="sm"
-              variant="outline"
-              onPress={() => router.push("/(tabs)/home")}
-              className="mx-4"
+      <SafeAreaView className="bg-background-100 p-4">
+        <HStack className="items-center justify-between px-4 pt-4">
+          <VStack space="sm">
+            <Heading size="2xl">Estatísticas</Heading>
+            <Text className="text-typography-500">
+              Consulte sua evolução e desempenho!
+            </Text>
+          </VStack>
+          <Button
+            variant="solid"
+            action="primary"
+            onPress={() => setShowFilters(true)}
+          >
+            <ButtonIcon as={FilterIcon} />
+          </Button>
+        </HStack>
+      </SafeAreaView>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        className="p-4 bg-background-100"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={["#007AFF"]}
+            tintColor="#007AFF"
+          />
+        }
+      >
+        <Box className="pb-32">
+          {loading && !refreshing && (
+            <View
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: "rgba(255, 255, 255, 0.8)",
+                justifyContent: "center",
+                alignItems: "center",
+                zIndex: 1000,
+              }}
             >
-              <Icon as={ArrowLeftIcon} />
-            </Button>
-          ),
-          headerRight: () => (
-            <Button
-              variant="outline"
-              size="sm"
-              onPress={() => setShowFilters(!showFilters)}
-              className="mr-2"
-            >
-              <Icon as={FilterIcon} />
-            </Button>
-          ),
-        }}
-      />
-      <SafeAreaView className="flex-1 bg-background-100">
-        <ScrollView className="pb-32 p-4" showsVerticalScrollIndicator={false}>
-          {showFilters && (
-            <StatsFilters
-              filters={filters}
-              onFiltersChange={setFilters}
-              tags={allTags}
-              onApply={handleApplyFilters}
-              onClear={handleClearFilters}
-            />
+              <ActivityIndicator size="large" color="#007AFF" />
+              <Text style={{ marginTop: 12, color: "#666" }}>
+                Carregando estatísticas...
+              </Text>
+            </View>
           )}
 
-          <StatsCard
-            title="Estatísticas Gerais"
-            description={getFilterDescription()}
-            stats={stats}
-            showCompletionRate
-          />
+          <StatsCard stats={stats} />
 
-          {/* Seção de Gráficos em Grid para Mobile */}
-          <View className="gap-4">
-            <Text size="xl" weight="semibold">
-              Visualizações
+          <View style={{ gap: 16, marginTop: 24 }}>
+            <Text size="xl" className="font-bold">
+              Por Frequência
             </Text>
 
-            {/* Grid de gráficos - 2 colunas para mobile */}
-            <View className="flex-row flex-wrap gap-4">
-              {/* Maior Streak - Card menor */}
-              <View className="flex-1 min-w-[48%]">
-                <Card className="p-3">
-                  <View className="items-center gap-2">
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+              <View style={{ flex: 1, minWidth: "30%" }}>
+                <Card className="p-4 bg-primary-50">
+                  <View style={{ alignItems: "center", gap: 8 }}>
                     <Icon
-                      as={TrendingUpIcon}
-                      size={18}
-                      className="text-primary"
+                      as={CalendarIcon}
+                      size="md"
+                      className="text-primary-600"
                     />
-                    <Text size="sm" weight="semibold" className="text-center">
-                      Maior Sequência
+                    <Text
+                      size="sm"
+                      className="font-semibold text-center text-primary-700"
+                    >
+                      Diário
                     </Text>
-                    <View className="items-center">
-                      <Text size="xl" weight="bold" className="text-primary">
-                        {stats.longestStreak}
+                    <View style={{ alignItems: "center" }}>
+                      <Text size="xl" className="font-bold text-primary-600">
+                        {dailyHabits.length}
+                      </Text>
+                      <Text size="xs" className="text-primary-500 text-center">
+                        hábitos
                       </Text>
                       <Text
-                        size="xs"
-                        className="text-muted-foreground text-center"
+                        size="sm"
+                        className="font-semibold text-primary-600 mt-2"
                       >
-                        {stats.longestStreak === 1 ? "dia" : "dias"}{" "}
-                        consecutivos
+                        {stats.dailyCompletionRate}% sucesso
                       </Text>
                     </View>
                   </View>
                 </Card>
               </View>
 
-              {/* Gráfico de Progresso - Card menor */}
-              <View className="flex-1 min-w-[48%]">
-                <Card className="p-3">
-                  <View className="items-center gap-2">
+              <View style={{ flex: 1, minWidth: "30%" }}>
+                <Card className="p-4 bg-success-50">
+                  <View style={{ alignItems: "center", gap: 8 }}>
                     <Icon
-                      as={BarChart3Icon}
-                      size={18}
-                      className="text-primary"
+                      as={CalendarIcon}
+                      size="md"
+                      className="text-success-600"
                     />
-                    <Text size="sm" weight="semibold" className="text-center">
-                      Progresso
+                    <Text
+                      size="sm"
+                      className="font-semibold text-center text-success-700"
+                    >
+                      Semanal
                     </Text>
-                    <ProgressChart
-                      data={completionChartData}
-                      width={80}
-                      height={80}
-                      strokeWidth={8}
-                      radius={32}
-                      chartConfig={{
-                        ...chartConfig,
-                        color: (opacity = 1, index) => {
-                          return (
-                            completionChartData.colors[index] ||
-                            `rgba(0, 122, 255, ${opacity})`
-                          );
-                        },
-                      }}
-                      hideLegend
+                    <View style={{ alignItems: "center" }}>
+                      <Text size="xl" className="font-bold text-success-600">
+                        {weeklyHabits.length}
+                      </Text>
+                      <Text size="xs" className="text-success-500 text-center">
+                        hábitos
+                      </Text>
+                      <Text
+                        size="sm"
+                        className="font-semibold text-success-600 mt-2"
+                      >
+                        {stats.weeklyCompletionRate}% sucesso
+                      </Text>
+                    </View>
+                  </View>
+                </Card>
+              </View>
+
+              <View style={{ flex: 1, minWidth: "30%" }}>
+                <Card className="p-4 bg-purple-50">
+                  <View style={{ alignItems: "center", gap: 8 }}>
+                    <Icon
+                      as={CalendarIcon}
+                      size="md"
+                      className="text-purple-600"
                     />
+                    <Text
+                      size="sm"
+                      className="font-semibold text-center text-purple-700"
+                    >
+                      Mensal
+                    </Text>
+                    <View style={{ alignItems: "center" }}>
+                      <Text size="xl" className="font-bold text-purple-600">
+                        {monthlyHabits.length}
+                      </Text>
+                      <Text size="xs" className="text-purple-500 text-center">
+                        hábitos
+                      </Text>
+                      <Text
+                        size="sm"
+                        className="font-semibold text-purple-600 mt-2"
+                      >
+                        {stats.monthlyCompletionRate}% sucesso
+                      </Text>
+                    </View>
                   </View>
                 </Card>
               </View>
             </View>
 
-            {/* Gráfico de Atividades - Largura total */}
-            {activityChartData.datasets[0].data.length > 0 && (
+            {hasFrequencyData && (
               <Card className="p-4">
-                <View className="flex-row items-center gap-3 mb-3">
-                  <Icon as={CalendarIcon} size={18} className="text-primary" />
-                  <Text size="lg" weight="semibold">
-                    Atividades (15 dias)
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 12,
+                    marginBottom: 12,
+                  }}
+                >
+                  <Icon as={BarChartIcon} size="md" className="text-primary" />
+                  <Text size="lg" className="font-semibold">
+                    Hábitos Completados por Frequência
+                  </Text>
+                </View>
+                <BarChart
+                  data={frequencyChartData}
+                  width={chartWidth}
+                  height={chartHeight}
+                  chartConfig={{
+                    ...chartConfig,
+                    color: (opacity = 1) => `rgba(52, 199, 89, ${opacity})`,
+                    barPercentage: 0.5,
+                  }}
+                  style={{ borderRadius: 12 }}
+                  showValuesOnTopOfBars
+                  flatColor={true}
+                  fromZero
+                  yAxisLabel=""
+                  yAxisSuffix=""
+                />
+              </Card>
+            )}
+          </View>
+
+          <View style={{ gap: 16, marginTop: 24 }}>
+            <Text size="xl" className="font-bold">
+              Hábitos Completados:
+            </Text>
+
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+              <View style={{ flex: 1, minWidth: "48%" }}>
+                <Card className="p-4">
+                  <View style={{ alignItems: "center", gap: 8 }}>
+                    <Icon
+                      as={CheckCircleIcon}
+                      size="md"
+                      className="text-success-600"
+                    />
+                    <Text size="sm" className="font-semibold text-center">
+                      Completados
+                    </Text>
+                    <View style={{ alignItems: "center" }}>
+                      <Text size="xl" className="font-bold text-success-600">
+                        {stats.completed}
+                      </Text>
+                      <Text
+                        size="xs"
+                        className="text-typography-500 text-center"
+                      >
+                        tarefas concluídas
+                      </Text>
+                    </View>
+                  </View>
+                </Card>
+              </View>
+
+              <View style={{ flex: 1, minWidth: "48%" }}>
+                <Card className="p-4">
+                  <View style={{ alignItems: "center", gap: 8 }}>
+                    <Icon
+                      as={TargetIcon}
+                      size="md"
+                      className="text-primary-500"
+                    />
+                    <Text size="sm" className="font-semibold text-center">
+                      Taxa de Conclusão
+                    </Text>
+                    <View style={{ alignItems: "center" }}>
+                      <Text size="xl" className="font-bold text-primary-500">
+                        {stats.completionRate}%
+                      </Text>
+                      <Text
+                        size="xs"
+                        className="text-typography-500 text-center"
+                      >
+                        sucesso geral
+                      </Text>
+                    </View>
+                  </View>
+                </Card>
+              </View>
+            </View>
+
+            {hasActivityData && (
+              <Card className="p-4">
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 12,
+                    marginBottom: 12,
+                  }}
+                >
+                  <Icon as={BarChart3Icon} size="md" className="text-primary" />
+                  <Text size="lg" className="font-semibold">
+                    Atividades Realizadas (15 dias)
                   </Text>
                 </View>
                 <LineChart
@@ -451,75 +851,306 @@ export default function StatsScreen() {
                   height={chartHeight}
                   chartConfig={chartConfig}
                   bezier
-                  withVerticalLines={false} // Menos linhas para mobile
+                  withVerticalLines={false}
                   withHorizontalLines={true}
                   withInnerLines={false}
                   withOuterLines={false}
-                  style={{
-                    borderRadius: 12,
-                    paddingRight: 0, // Remove padding extra
-                  }}
-                  segments={4} // Menos segmentos para mobile
-                />
-              </Card>
-            )}
-
-            {/* Gráfico de Distribuição Semanal - Largura total */}
-            {weeklyChartData.datasets[0].data.length > 0 && (
-              <Card className="p-4">
-                <View className="flex-row items-center gap-3 mb-3">
-                  <Icon as={BarChart3Icon} size={18} className="text-primary" />
-                  <Text size="lg" weight="semibold">
-                    Distribuição Semanal
-                  </Text>
-                </View>
-                <BarChart
-                  data={weeklyChartData}
-                  width={chartWidth}
-                  height={chartHeight}
-                  chartConfig={{
-                    ...chartConfig,
-                    color: (opacity = 1) => `rgba(52, 199, 89, ${opacity})`,
-                    barPercentage: 0.6, // Barras mais finas para mobile
-                  }}
-                  style={{
-                    borderRadius: 12,
-                  }}
-                  showValuesOnTopOfBars
-                  withCustomBarColorFromData={true}
-                  flatColor={true}
-                  fromZero
+                  style={{ borderRadius: 12 }}
+                  segments={4}
                 />
               </Card>
             )}
           </View>
 
-          {/* Seção de Detalhes por Hábito */}
-          <View className="gap-3 mt-4">
-            <Text size="xl" weight="semibold">
-              Detalhes por Hábito
+          <View style={{ gap: 16, marginTop: 24 }}>
+            <Text size="xl" className="font-bold">
+              Porcentagem de Sucesso %
             </Text>
-            {habits.length === 0 ? (
-              <Card>
-                <View className="py-8">
-                  <Text className="text-center text-muted-foreground">
-                    Nenhum hábito encontrado com os filtros aplicados.
+
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+              <View style={{ flex: 1, minWidth: "48%" }}>
+                <Card className="p-4">
+                  <View style={{ alignItems: "center", gap: 8 }}>
+                    <Icon
+                      as={TrendingUpIcon}
+                      size="md"
+                      className="text-success-600"
+                    />
+                    <Text size="sm" className="font-semibold text-center">
+                      Melhor Dia
+                    </Text>
+                    <View style={{ alignItems: "center" }}>
+                      <Text size="lg" className="font-bold text-success-600">
+                        {formatDate(stats.bestDay.date)}
+                      </Text>
+                      <Text
+                        size="sm"
+                        className="text-success-500 font-semibold"
+                      >
+                        {stats.bestDay.rate}% sucesso
+                      </Text>
+                    </View>
+                  </View>
+                </Card>
+              </View>
+
+              <View style={{ flex: 1, minWidth: "48%" }}>
+                <Card className="p-4">
+                  <View style={{ alignItems: "center", gap: 8 }}>
+                    <Icon
+                      as={TrendingUpIcon}
+                      size="md"
+                      className="text-error-600"
+                      style={{ transform: [{ rotate: "180deg" }] }}
+                    />
+                    <Text size="sm" className="font-semibold text-center">
+                      Pior Dia
+                    </Text>
+                    <View style={{ alignItems: "center" }}>
+                      <Text size="lg" className="font-bold text-error-600">
+                        {formatDate(stats.worstDay.date)}
+                      </Text>
+                      <Text size="sm" className="text-error-500 font-semibold">
+                        {stats.worstDay.rate}% sucesso
+                      </Text>
+                    </View>
+                  </View>
+                </Card>
+              </View>
+            </View>
+
+            {hasComparisonData && (
+              <Card className="p-4">
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 12,
+                    marginBottom: 12,
+                  }}
+                >
+                  <Icon as={BarChart3Icon} size="md" className="text-primary" />
+                  <Text size="lg" className="font-semibold">
+                    Comparação de Sucesso por Frequência
                   </Text>
+                </View>
+                <BarChart
+                  data={comparisonChartData}
+                  width={chartWidth}
+                  height={chartHeight}
+                  chartConfig={{
+                    ...chartConfig,
+                    color: (opacity = 1) => `rgba(255, 149, 0, ${opacity})`,
+                    barPercentage: 0.5,
+                  }}
+                  style={{ borderRadius: 12 }}
+                  showValuesOnTopOfBars
+                  flatColor={true}
+                  fromZero
+                  yAxisLabel=""
+                  yAxisSuffix="%"
+                />
+              </Card>
+            )}
+          </View>
+
+          <View style={{ gap: 16, marginTop: 24 }}>
+            <Text size="xl" className="font-bold">
+              Comparação de Atividades Realizadas:
+            </Text>
+
+            {hasActivitiesComparisonData && (
+              <Card className="p-4">
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 12,
+                    marginBottom: 12,
+                  }}
+                >
+                  <Icon
+                    as={GitCompareIcon}
+                    size="md"
+                    className="text-primary"
+                  />
+                  <Text size="lg" className="font-semibold">
+                    Atividades por Frequência (7 dias)
+                  </Text>
+                </View>
+                <LineChart
+                  data={activitiesComparisonChartData}
+                  width={chartWidth}
+                  height={chartHeight}
+                  chartConfig={chartConfig}
+                  bezier
+                  withVerticalLines={false}
+                  withHorizontalLines={true}
+                  withInnerLines={false}
+                  withOuterLines={false}
+                  style={{ borderRadius: 12 }}
+                  segments={4}
+                />
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    flexWrap: "wrap",
+                    gap: 16,
+                    marginTop: 12,
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 12,
+                        height: 12,
+                        backgroundColor: "rgba(0, 122, 255, 1)",
+                        borderRadius: 6,
+                      }}
+                    />
+                    <Text size="xs">Diário</Text>
+                  </View>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 12,
+                        height: 12,
+                        backgroundColor: "rgba(52, 199, 89, 1)",
+                        borderRadius: 6,
+                      }}
+                    />
+                    <Text size="xs">Semanal</Text>
+                  </View>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 12,
+                        height: 12,
+                        backgroundColor: "rgba(255, 149, 0, 1)",
+                        borderRadius: 6,
+                      }}
+                    />
+                    <Text size="xs">Mensal</Text>
+                  </View>
+                </View>
+              </Card>
+            )}
+          </View>
+
+          <View style={{ gap: 16, marginTop: 24 }}>
+            <Text size="xl" className="font-bold">
+              Maior Sequência:
+            </Text>
+
+            <Card className="p-6">
+              <View style={{ alignItems: "center", gap: 16 }}>
+                <View
+                  style={{
+                    width: 100,
+                    height: 100,
+                    borderRadius: 50,
+                    backgroundColor: "#007AFF20",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    borderWidth: 4,
+                    borderColor: "#007AFF",
+                  }}
+                >
+                  <Text size="3xl" className="font-bold text-primary">
+                    {stats.longestStreak}
+                  </Text>
+                </View>
+                <View style={{ alignItems: "center" }}>
+                  <Text size="lg" className="font-semibold text-center">
+                    {stats.longestStreak === 1
+                      ? "Dia consecutivo"
+                      : "Dias consecutivos"}
+                  </Text>
+                  <Text
+                    size="sm"
+                    className="text-typography-500 text-center mt-2"
+                  >
+                    Esta é sua maior sequência de hábitos completados sem
+                    interrupção
+                  </Text>
+                </View>
+              </View>
+            </Card>
+          </View>
+
+          <View style={{ gap: 12, marginTop: 24, marginBottom: 24 }}>
+            <Text size="xl" className="font-bold">
+              Detalhes por Hábito ({habits.length})
+            </Text>
+
+            {loading && !refreshing ? (
+              <Card>
+                <View style={{ paddingVertical: 32 }}>
+                  <ActivityIndicator size="large" color="#007AFF" />
+                  <Text className="text-center text-typography-500 mt-2">
+                    Carregando hábitos...
+                  </Text>
+                </View>
+              </Card>
+            ) : habits.length === 0 ? (
+              <Card>
+                <View
+                  style={{
+                    paddingVertical: 32,
+                    alignItems: "center",
+                    gap: 12,
+                  }}
+                >
+                  <BarChart3Icon size={48} color="#999" />
+                  <Text className="text-center text-typography-500">
+                    {Object.keys(filters).length > 0
+                      ? "Nenhum hábito encontrado com os filtros aplicados."
+                      : "Nenhum hábito cadastrado ainda."}
+                  </Text>
+                  {Object.keys(filters).length > 0 && (
+                    <TouchableOpacity
+                      onPress={handleClearFilters}
+                      style={{
+                        paddingHorizontal: 16,
+                        paddingVertical: 8,
+                        backgroundColor: "#007AFF",
+                        borderRadius: 6,
+                      }}
+                    >
+                      <Text style={{ color: "white" }}>Limpar Filtros</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               </Card>
             ) : (
               habits.map((habit) => {
-                const completionRate = getCompletionRate(habit);
-                const completedCount = habit.completions.filter(
-                  (c) => c.completed,
-                ).length;
-                const totalCount = habit.completions.length;
+                const completedCount = habit.completions?.length || 0;
+                const totalCount = 30;
 
                 return (
                   <HabitDetailCard
                     key={habit.id}
                     habit={habit}
-                    completionRate={completionRate}
+                    completionRate={habit.completionRate}
                     completedCount={completedCount}
                     totalCount={totalCount}
                   />
@@ -527,8 +1158,42 @@ export default function StatsScreen() {
               })
             )}
           </View>
-        </ScrollView>
-      </SafeAreaView>
+        </Box>
+      </ScrollView>
+
+      <Modal
+  visible={showFilters}
+  animationType="slide"
+  transparent={true}
+  onRequestClose={() => setShowFilters(false)}
+>
+  <View className="flex-1 bg-black/80 dark:bg-black/95 justify-end">
+    <View className="bg-white dark:bg-gray-950 rounded-t-2xl p-5 max-h-[85%] min-h-[400px] shadow-xl">
+      <View className="flex-row justify-between items-center mb-5 pb-4 border-b border-gray-200 dark:border-gray-800">
+        <Text size="xl" className="font-bold text-gray-900 dark:text-gray-100">
+          Filtrar Estatísticas
+        </Text>
+        <TouchableOpacity
+          onPress={() => setShowFilters(false)}
+          className="p-1 rounded-full bg-gray-100 dark:bg-gray-800"
+        >
+          <XIcon 
+            size={24} 
+            className="text-gray-600 dark:text-gray-300" 
+          />
+        </TouchableOpacity>
+      </View>
+
+      <StatsFilters
+        filters={filters}
+        onFiltersChange={handleApplyFilters}
+        tags={allTags}
+        onApply={() => setShowFilters(false)}
+        onClear={handleClearFilters}
+      />
+    </View>
+  </View>
+</Modal>
     </>
   );
 }

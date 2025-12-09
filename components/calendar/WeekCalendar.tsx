@@ -115,11 +115,18 @@ const WeekCalendar = ({ selectedDate, onDateSelect }: WeekCalendarProps) => {
               day.isToday && "border-2 border-primary-500",
             )}
           >
-            <Text className={cn("text-xs font-medium")}>{day.dayOfWeek}</Text>
+            <Text
+              className={cn(
+                "text-xs font-medium",
+                day.isSelected && "text-typography-0",
+              )}
+            >
+              {day.dayOfWeek}
+            </Text>
             <Text
               className={cn(
                 "font-bold text-lg",
-                day.isSelected && "text-typography-900",
+                day.isSelected && "text-typography-0",
                 day.isToday && !day.isSelected && "text-primary-500",
               )}
             >

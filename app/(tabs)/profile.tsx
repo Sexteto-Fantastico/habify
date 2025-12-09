@@ -57,39 +57,45 @@ export default function ProfilePage() {
   return (
     <>
       <SafeAreaView
-        className="gap-8 p-6 bg-background-0 border border-typography-100 border-b-2"
+        className="gap-8 p-4 bg-background-0 border border-typography-100 border-b-2"
         edges={["top"]}
       >
-        <Heading size="2xl">Seu Perfil</Heading>
-        <HStack space="3xl" className="items-center">
-          <Avatar size="lg">
-            <AvatarFallbackText>{user?.name}</AvatarFallbackText>
-            <AvatarImage source={user?.avatar || user?.name.charAt(0)} />
-          </Avatar>
+        <VStack space="lg" className="px-4 pt-4">
+          <Heading size="2xl">Seu Perfil</Heading>
+          <HStack space="3xl" className="items-center">
+            <Avatar size="lg">
+              <AvatarFallbackText>{user?.name}</AvatarFallbackText>
+              <AvatarImage source={user?.avatar || user?.name.charAt(0)} />
+            </Avatar>
 
-          <VStack>
-            <Heading size="xl" className="mb-2">
-              {user?.name}
-            </Heading>
-            <HStack className="items-center">
-              <Icon as={Mail} size="xs" className="mr-2 text-typography-500" />
-              <Text size="sm" className="text-typography-500">
-                {user?.email}
-              </Text>
-            </HStack>
-            <HStack className="items-center">
-              <Icon
-                as={CalendarIcon}
-                size="xs"
-                className="mr-2 text-typography-500"
-              />
-              <Text size="sm" className="text-typography-500">
-                Desde{" "}
-                {new Date(user?.createdAt ?? Date.now()).toLocaleDateString()}
-              </Text>
-            </HStack>
-          </VStack>
-        </HStack>
+            <VStack>
+              <Heading size="xl" className="mb-2">
+                {user?.name}
+              </Heading>
+              <HStack className="items-center">
+                <Icon
+                  as={Mail}
+                  size="xs"
+                  className="mr-2 text-typography-500"
+                />
+                <Text size="sm" className="text-typography-500">
+                  {user?.email}
+                </Text>
+              </HStack>
+              <HStack className="items-center">
+                <Icon
+                  as={CalendarIcon}
+                  size="xs"
+                  className="mr-2 text-typography-500"
+                />
+                <Text size="sm" className="text-typography-500">
+                  Desde{" "}
+                  {new Date(user?.createdAt ?? Date.now()).toLocaleDateString()}
+                </Text>
+              </HStack>
+            </VStack>
+          </HStack>
+        </VStack>
       </SafeAreaView>
       <ScrollView className="p-4 bg-background-100">
         <Card>
@@ -115,25 +121,16 @@ export default function ProfilePage() {
           <Box className="flex-row justify-between items-center mb-4">
             <Text size="xl">Conta</Text>
           </Box>
-          <Box className="flex-row gap-2 p-2">
+          <Box className="gap-2 p-2">
             <Box className="flex-1">
-              <Button
-                size="sm"
-                variant="outline"
-                action="secondary"
-                onPress={signOut}
-              >
+              <Button variant="outline" action="secondary" onPress={signOut}>
                 <ButtonIcon as={LogOutIcon} />
                 <ButtonText>Sair da Conta</ButtonText>
               </Button>
             </Box>
 
             <Box className="flex-1">
-              <Button
-                size="sm"
-                action="negative"
-                onPress={() => setDeleteOpen(true)}
-              >
+              <Button action="negative" onPress={() => setDeleteOpen(true)}>
                 <ButtonIcon as={Trash2Icon} />
                 <ButtonText>Deletar Conta</ButtonText>
               </Button>
