@@ -1,7 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
-import { Box } from "../ui/box";
-import { Grid, GridItem } from "../ui/grid";
+import { View } from "react-native";
 
 interface StatsCardProps {
   stats: {
@@ -28,32 +27,45 @@ export function StatsCard({ stats }: StatsCardProps) {
 
   return (
     <Card>
-      <Grid _extra={{ className: "grid-cols-2 gap-4" }}>
-        <GridItem _extra={{ className: "col-span-1" }}>
-          <Text>Total</Text>
+      <View className="flex-row flex-wrap">
+        {/* Total */}
+        <View className="w-1/2 p-4">
+          <Text size="sm" className="text-muted-foreground mb-1">
+            Total
+          </Text>
           <Text className="text-2xl font-bold">{stats.total}</Text>
-        </GridItem>
-        <GridItem _extra={{ className: "col-span-1" }}>
-          <Text>Completos</Text>
+        </View>
+        
+        {/* Completos */}
+        <View className="w-1/2 p-4">
+          <Text size="sm" className="text-muted-foreground mb-1">
+            Completos
+          </Text>
           <Text className={`text-2xl font-bold ${getStatusColor("completed")}`}>
             {stats.completed}
           </Text>
-        </GridItem>
-        <GridItem _extra={{ className: "col-span-1" }}>
-          <Text>Pendentes</Text>
+        </View>
+        
+        {/* Pendentes */}
+        <View className="w-1/2 p-4">
+          <Text size="sm" className="text-muted-foreground mb-1">
+            Pendentes
+          </Text>
           <Text className={`text-2xl font-bold ${getStatusColor("pending")}`}>
             {stats.pending}
           </Text>
-        </GridItem>
-        <GridItem _extra={{ className: "col-span-1" }}>
-          <Text>Incompletos</Text>
-          <Text
-            className={`text-2xl font-bold ${getStatusColor("notCompleted")}`}
-          >
+        </View>
+        
+        {/* Incompletos */}
+        <View className="w-1/2 p-4">
+          <Text size="sm" className="text-muted-foreground mb-1">
+            Incompletos
+          </Text>
+          <Text className={`text-2xl font-bold ${getStatusColor("notCompleted")}`}>
             {stats.notCompleted}
           </Text>
-        </GridItem>
-      </Grid>
+        </View>
+      </View>
     </Card>
   );
 }

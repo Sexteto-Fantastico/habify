@@ -28,6 +28,7 @@ import {
   ActivityIndicator,
   Platform,
   RefreshControl,
+  Dimensions,
 } from "react-native";
 import { getAllHabits } from "@/api/habit";
 import { getHabitStats } from "@/api/stat";
@@ -66,6 +67,7 @@ interface Filters {
 export default function StatsScreen() {
   const router = useRouter();
   const { width: screenWidth } = useWindowDimensions();
+  const [containerWidth, setContainerWidth] = React.useState(screenWidth - 32);
 
   const [stats, setStats] = React.useState({
     total: 0,
@@ -84,7 +86,6 @@ export default function StatsScreen() {
   const [habits, setHabits] = React.useState<HabitWithCompletions[]>([]);
   const [allTags, setAllTags] = React.useState<Tag[]>([]);
   const [showFilters, setShowFilters] = React.useState(false);
-  const [filters, setFilters] = React.useState<Filters>({});
   const [loading, setLoading] = React.useState(true);
   const [refreshing, setRefreshing] = React.useState(false);
 
@@ -125,6 +126,35 @@ export default function StatsScreen() {
   const [monthlyHabits, setMonthlyHabits] = React.useState<
     HabitWithCompletions[]
   >([]);
+
+
+  const getDefaultDateRange = () => {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    
+    const formatDate = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    
+    return {
+      startDate: formatDate(firstDay),
+      endDate: formatDate(lastDay),
+      frequency: undefined,
+      tags: undefined,
+    };
+  };
+
+  const [filters, setFilters] = React.useState<Filters>(getDefaultDateRange());
+
+  const onContainerLayout = (event: any) => {
+    const { width } = event.nativeEvent.layout;
+
+    setContainerWidth(width - 32);
+  };
 
   const getCompletionDateString = (c: any): string | null => {
     if (!c) return null;
@@ -189,15 +219,16 @@ export default function StatsScreen() {
     return longestStreak;
   };
 
-  const calculateCompletionStats = (habitsList: Habit[]) => {
+  const calculateCompletionStats = (habitsList: HabitWithCompletions[]) => {
     if (habitsList.length === 0) return { total: 0, completed: 0, rate: 0 };
 
     let totalOpportunities = 0;
     let completedCount = 0;
 
     habitsList.forEach((habit) => {
+
       if (habit.completions && Array.isArray(habit.completions)) {
-        totalOpportunities += 1;
+        totalOpportunities += 1; 
         completedCount += habit.completions.length > 0 ? 1 : 0;
       }
     });
@@ -245,11 +276,57 @@ export default function StatsScreen() {
       }
 
       const habitsWithCompletions = filteredHabits.map((habit) => {
-        const completions = habit.completions || [];
-        const completionRate =
-          completions.length > 0
-            ? Math.min(Math.round((completions.length / 30) * 100), 100)
-            : 0;
+
+        let completions = habit.completions || [];
+
+        if (filters.startDate || filters.endDate) {
+          const startDate = filters.startDate ? new Date(filters.startDate) : null;
+          const endDate = filters.endDate ? new Date(filters.endDate) : null;
+          
+          completions = completions.filter(completion => {
+            const completionDate = getCompletionDateString(completion);
+            if (!completionDate) return false;
+            
+            const date = new Date(completionDate);
+            
+            if (startDate && date < startDate) return false;
+            if (endDate && date > endDate) return false;
+            
+            return true;
+          });
+        }
+        
+
+        let totalOpportunities = 0;
+        
+        if (filters.startDate && filters.endDate) {
+          const start = new Date(filters.startDate);
+          const end = new Date(filters.endDate);
+          const daysInPeriod = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+          
+          switch (habit.frequency) {
+            case 'daily':
+              totalOpportunities = daysInPeriod;
+              break;
+            case 'weekly':
+              totalOpportunities = Math.ceil(daysInPeriod / 7);
+              break;
+            case 'monthly':
+              totalOpportunities = Math.ceil(daysInPeriod / 30);
+              break;
+            default:
+              totalOpportunities = daysInPeriod;
+          }
+        } else {
+
+          totalOpportunities = habit.frequency === 'daily' ? 30 : 
+                               habit.frequency === 'weekly' ? 4 : 
+                               1; 
+        }
+        
+        const completionRate = totalOpportunities > 0
+          ? Math.min(Math.round((completions.length / totalOpportunities) * 100), 100)
+          : 0;
 
         return {
           ...habit,
@@ -258,10 +335,91 @@ export default function StatsScreen() {
         };
       });
 
-      const dailyStats = calculateCompletionStats(dailyHabitsList);
-      const weeklyStats = calculateCompletionStats(weeklyHabitsList);
-      const monthlyStats = calculateCompletionStats(monthlyHabitsList);
-      const allStats = calculateCompletionStats(filteredHabits);
+      const dailyStats = calculateCompletionStats(
+        dailyHabitsList.map(h => ({
+          ...h,
+          completions: h.completions || [],
+          completionRate: 0
+        })).filter(h => {
+
+          let completions = h.completions || [];
+          if (filters.startDate || filters.endDate) {
+            const startDate = filters.startDate ? new Date(filters.startDate) : null;
+            const endDate = filters.endDate ? new Date(filters.endDate) : null;
+            
+            completions = completions.filter(completion => {
+              const completionDate = getCompletionDateString(completion);
+              if (!completionDate) return false;
+              
+              const date = new Date(completionDate);
+              
+              if (startDate && date < startDate) return false;
+              if (endDate && date > endDate) return false;
+              
+              return true;
+            });
+          }
+          return true;
+        })
+      );
+      
+      const weeklyStats = calculateCompletionStats(
+        weeklyHabitsList.map(h => ({
+          ...h,
+          completions: h.completions || [],
+          completionRate: 0
+        })).filter(h => {
+
+          let completions = h.completions || [];
+          if (filters.startDate || filters.endDate) {
+            const startDate = filters.startDate ? new Date(filters.startDate) : null;
+            const endDate = filters.endDate ? new Date(filters.endDate) : null;
+            
+            completions = completions.filter(completion => {
+              const completionDate = getCompletionDateString(completion);
+              if (!completionDate) return false;
+              
+              const date = new Date(completionDate);
+              
+              if (startDate && date < startDate) return false;
+              if (endDate && date > endDate) return false;
+              
+              return true;
+            });
+          }
+          return true;
+        })
+      );
+      
+      const monthlyStats = calculateCompletionStats(
+        monthlyHabitsList.map(h => ({
+          ...h,
+          completions: h.completions || [],
+          completionRate: 0
+        })).filter(h => {
+
+          let completions = h.completions || [];
+          if (filters.startDate || filters.endDate) {
+            const startDate = filters.startDate ? new Date(filters.startDate) : null;
+            const endDate = filters.endDate ? new Date(filters.endDate) : null;
+            
+            completions = completions.filter(completion => {
+              const completionDate = getCompletionDateString(completion);
+              if (!completionDate) return false;
+              
+              const date = new Date(completionDate);
+              
+              if (startDate && date < startDate) return false;
+              if (endDate && date > endDate) return false;
+              
+              return true;
+            });
+          }
+          return true;
+        })
+      );
+      
+      const allStats = calculateCompletionStats(habitsWithCompletions);
 
       const longestStreak = calculateLongestStreak(habitsWithCompletions);
       const dailyActivityStats = calculateDailyActivityStats(
@@ -272,7 +430,7 @@ export default function StatsScreen() {
         total: allStats.total,
         completed: allStats.completed,
         pending: 0,
-        notCompleted: allStats.total - allStats.completed,
+        notCompleted: Math.max(0, allStats.total - allStats.completed),
         longestStreak,
         completionRate: allStats.rate,
         dailyCompletionRate: dailyStats.rate,
@@ -287,21 +445,33 @@ export default function StatsScreen() {
         dailyHabitsList.map((h) => ({
           ...h,
           completions: h.completions || [],
-          completionRate: calculateCompletionStats([h]).rate,
+          completionRate: calculateCompletionStats([{
+            ...h,
+            completions: h.completions || [],
+            completionRate: 0
+          }]).rate,
         })),
       );
       setWeeklyHabits(
         weeklyHabitsList.map((h) => ({
           ...h,
           completions: h.completions || [],
-          completionRate: calculateCompletionStats([h]).rate,
+          completionRate: calculateCompletionStats([{
+            ...h,
+            completions: h.completions || [],
+            completionRate: 0
+          }]).rate,
         })),
       );
       setMonthlyHabits(
         monthlyHabitsList.map((h) => ({
           ...h,
           completions: h.completions || [],
-          completionRate: calculateCompletionStats([h]).rate,
+          completionRate: calculateCompletionStats([{
+            ...h,
+            completions: h.completions || [],
+            completionRate: 0
+          }]).rate,
         })),
       );
 
@@ -325,18 +495,34 @@ export default function StatsScreen() {
     const activitiesMap: Record<string, { completed: number; total: number }> =
       {};
 
-    const last30Days = Array.from({ length: 30 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (29 - i));
-      return date.toISOString().split("T")[0];
-    });
+  
+    let startDate: Date;
+    let endDate: Date;
+    
+    if (filters.startDate && filters.endDate) {
+      startDate = new Date(filters.startDate);
+      endDate = new Date(filters.endDate);
+    } else {
 
-    last30Days.forEach((date) => {
+      endDate = new Date();
+      startDate = new Date();
+      startDate.setDate(endDate.getDate() - 29);
+    }
+    
+
+    const datesInRange: string[] = [];
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      datesInRange.push(currentDate.toISOString().split("T")[0]);
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    datesInRange.forEach((date) => {
       activitiesMap[date] = { completed: 0, total: 0 };
     });
 
     habitsWithCompletions.forEach((habit) => {
-      last30Days.forEach((date) => {
+      datesInRange.forEach((date) => {
         activitiesMap[date].total++;
 
         if (wasHabitCompletedOnDate(habit, date)) {
@@ -345,7 +531,7 @@ export default function StatsScreen() {
       });
     });
 
-    const activities = last30Days.map((date) => {
+    const activities = datesInRange.map((date) => {
       const data = activitiesMap[date];
       const successRate =
         data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0;
@@ -381,13 +567,29 @@ export default function StatsScreen() {
     weeklyHabits: Habit[],
     monthlyHabits: Habit[],
   ) => {
-    const last15Days = Array.from({ length: 15 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (14 - i));
-      return date.toISOString().split("T")[0];
-    });
 
-    const dailyCompletions = last15Days.map((date) => {
+    let startDate: Date;
+    let endDate: Date;
+    
+    if (filters.startDate && filters.endDate) {
+      startDate = new Date(filters.startDate);
+      endDate = new Date(filters.endDate);
+    } else {
+  
+      endDate = new Date();
+      startDate = new Date();
+      startDate.setDate(endDate.getDate() - 14);
+    }
+    
+
+    const datesInRange: string[] = []; 
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate && datesInRange.length < 15) {
+      datesInRange.push(currentDate.toISOString().split("T")[0]);
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+  
+    const dailyCompletions = datesInRange.map((date) => {
       return allHabits.reduce((total: number, habit: HabitWithCompletions) => {
         if (wasHabitCompletedOnDate(habit, date)) {
           return total + 1;
@@ -395,13 +597,24 @@ export default function StatsScreen() {
         return total;
       }, 0);
     });
-
-    const labels = last15Days.map((date, index) => {
-      if (index % 3 === 0 || index === 14) {
+  
+    const labels = datesInRange.map((date, index) => {
+      if (index % Math.max(1, Math.floor(datesInRange.length / 5)) === 0 || index === datesInRange.length - 1) {
         const d = new Date(date);
         return `${d.getDate()}/${d.getMonth() + 1}`;
       }
       return "";
+    });
+  
+    setActivityChartData({
+      labels,
+      datasets: [
+        {
+          data: dailyCompletions,
+          color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+          strokeWidth: 3,
+        },
+      ],
     });
 
     setActivityChartData({
@@ -415,16 +628,35 @@ export default function StatsScreen() {
       ],
     });
 
+    const filterCompletionsByPeriod = (completions: any[]) => {
+      if (!filters.startDate && !filters.endDate) return completions;
+      
+      const startDate = filters.startDate ? new Date(filters.startDate) : null;
+      const endDate = filters.endDate ? new Date(filters.endDate) : null;
+      
+      return completions.filter(completion => {
+        const completionDate = getCompletionDateString(completion);
+        if (!completionDate) return false;
+        
+        const date = new Date(completionDate);
+        
+        if (startDate && date < startDate) return false;
+        if (endDate && date > endDate) return false;
+        
+        return true;
+      });
+    };
+
     const dailyCompleted = dailyHabits.reduce(
-      (sum: number, habit: Habit) => sum + (habit.completions || []).length,
+      (sum: number, habit: Habit) => sum + filterCompletionsByPeriod(habit.completions || []).length,
       0,
     );
     const weeklyCompleted = weeklyHabits.reduce(
-      (sum: number, habit: Habit) => sum + (habit.completions || []).length,
+      (sum: number, habit: Habit) => sum + filterCompletionsByPeriod(habit.completions || []).length,
       0,
     );
     const monthlyCompleted = monthlyHabits.reduce(
-      (sum: number, habit: Habit) => sum + (habit.completions || []).length,
+      (sum: number, habit: Habit) => sum + filterCompletionsByPeriod(habit.completions || []).length,
       0,
     );
 
@@ -439,25 +671,45 @@ export default function StatsScreen() {
       ],
     });
 
-    const dailyStats = calculateCompletionStats(dailyHabits);
-    const weeklyStats = calculateCompletionStats(weeklyHabits);
-    const monthlyStats = calculateCompletionStats(monthlyHabits);
+    const calculateRateForHabits = (habitsList: Habit[]) => {
+      if (habitsList.length === 0) return 0;
+      
+      let completedCount = 0;
+      habitsList.forEach(habit => {
+        const filteredCompletions = filterCompletionsByPeriod(habit.completions || []);
+        if (filteredCompletions.length > 0) {
+          completedCount++;
+        }
+      });
+      
+      return Math.round((completedCount / habitsList.length) * 100);
+    };
+
+    const dailyRate = calculateRateForHabits(dailyHabits);
+    const weeklyRate = calculateRateForHabits(weeklyHabits);
+    const monthlyRate = calculateRateForHabits(monthlyHabits);
 
     setComparisonChartData({
       labels: ["Diário", "Semanal", "Mensal"],
       datasets: [
         {
-          data: [dailyStats.rate, weeklyStats.rate, monthlyStats.rate],
+          data: [dailyRate, weeklyRate, monthlyRate],
           color: (opacity = 1) => `rgba(255, 149, 0, ${opacity})`,
           strokeWidth: 2,
         },
       ],
     });
 
+
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - (6 - i));
       return date;
+    }).filter(date => {
+
+      if (filters.startDate && date < new Date(filters.startDate)) return false;
+      if (filters.endDate && date > new Date(filters.endDate)) return false;
+      return true;
     });
 
     const comparisonLabels = last7Days.map((date, index) => {
@@ -530,7 +782,7 @@ export default function StatsScreen() {
   };
 
   const handleClearFilters = () => {
-    setFilters({});
+    setFilters(getDefaultDateRange());
     setShowFilters(false);
   };
 
@@ -558,12 +810,11 @@ export default function StatsScreen() {
       strokeWidth: "2",
       stroke: "#007AFF",
     },
-    propsForLabels: { fontSize: 10 },
+    propsForLabels: { fontSize: Platform.OS === 'ios' ? 10 : 9 },
     fillShadowGradientFrom: "#007AFF",
     fillShadowGradientTo: "rgba(0, 122, 255, 0.1)",
   };
-
-  const chartWidth = Math.min(screenWidth - 32, 400);
+  const chartWidth = Math.min(containerWidth, screenWidth - 32);
   const chartHeight = 180;
 
   const hasActivityData =
@@ -737,7 +988,7 @@ export default function StatsScreen() {
             </View>
 
             {hasFrequencyData && (
-              <Card className="p-4">
+              <Card className="p-4" onLayout={onContainerLayout}>
                 <View
                   style={{
                     flexDirection: "row",
@@ -751,22 +1002,28 @@ export default function StatsScreen() {
                     Hábitos Completados por Frequência
                   </Text>
                 </View>
-                <BarChart
-                  data={frequencyChartData}
-                  width={chartWidth}
-                  height={chartHeight}
-                  chartConfig={{
-                    ...chartConfig,
-                    color: (opacity = 1) => `rgba(52, 199, 89, ${opacity})`,
-                    barPercentage: 0.5,
-                  }}
-                  style={{ borderRadius: 12 }}
-                  showValuesOnTopOfBars
-                  flatColor={true}
-                  fromZero
-                  yAxisLabel=""
-                  yAxisSuffix=""
-                />
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  style={{ marginHorizontal: -4 }}
+                >
+                  <BarChart
+                    data={frequencyChartData}
+                    width={Math.max(chartWidth, 300)} 
+                    height={chartHeight}
+                    chartConfig={{
+                      ...chartConfig,
+                      color: (opacity = 1) => `rgba(52, 199, 89, ${opacity})`,
+                      barPercentage: 0.5,
+                    }}
+                    style={{ borderRadius: 12, marginHorizontal: 4 }}
+                    showValuesOnTopOfBars
+                    flatColor={true}
+                    fromZero
+                    yAxisLabel=""
+                    yAxisSuffix=""
+                  />
+                </ScrollView>
               </Card>
             )}
           </View>
@@ -831,7 +1088,7 @@ export default function StatsScreen() {
             </View>
 
             {hasActivityData && (
-              <Card className="p-4">
+              <Card className="p-4" onLayout={onContainerLayout}>
                 <View
                   style={{
                     flexDirection: "row",
@@ -842,22 +1099,28 @@ export default function StatsScreen() {
                 >
                   <Icon as={BarChart3Icon} size="md" className="text-primary" />
                   <Text size="lg" className="font-semibold">
-                    Atividades Realizadas (15 dias)
+                    Atividades Realizadas
                   </Text>
                 </View>
-                <LineChart
-                  data={activityChartData}
-                  width={chartWidth}
-                  height={chartHeight}
-                  chartConfig={chartConfig}
-                  bezier
-                  withVerticalLines={false}
-                  withHorizontalLines={true}
-                  withInnerLines={false}
-                  withOuterLines={false}
-                  style={{ borderRadius: 12 }}
-                  segments={4}
-                />
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  style={{ marginHorizontal: -4 }}
+                >
+                  <LineChart
+                    data={activityChartData}
+                    width={Math.max(chartWidth, 400)} 
+                    height={chartHeight}
+                    chartConfig={chartConfig}
+                    bezier
+                    withVerticalLines={false}
+                    withHorizontalLines={true}
+                    withInnerLines={false}
+                    withOuterLines={false}
+                    style={{ borderRadius: 12, marginHorizontal: 4 }}
+                    segments={4}
+                  />
+                </ScrollView>
               </Card>
             )}
           </View>
@@ -920,7 +1183,7 @@ export default function StatsScreen() {
             </View>
 
             {hasComparisonData && (
-              <Card className="p-4">
+              <Card className="p-4" onLayout={onContainerLayout}>
                 <View
                   style={{
                     flexDirection: "row",
@@ -934,22 +1197,28 @@ export default function StatsScreen() {
                     Comparação de Sucesso por Frequência
                   </Text>
                 </View>
-                <BarChart
-                  data={comparisonChartData}
-                  width={chartWidth}
-                  height={chartHeight}
-                  chartConfig={{
-                    ...chartConfig,
-                    color: (opacity = 1) => `rgba(255, 149, 0, ${opacity})`,
-                    barPercentage: 0.5,
-                  }}
-                  style={{ borderRadius: 12 }}
-                  showValuesOnTopOfBars
-                  flatColor={true}
-                  fromZero
-                  yAxisLabel=""
-                  yAxisSuffix="%"
-                />
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  style={{ marginHorizontal: -4 }}
+                >
+                  <BarChart
+                    data={comparisonChartData}
+                    width={Math.max(chartWidth, 300)}
+                    height={chartHeight}
+                    chartConfig={{
+                      ...chartConfig,
+                      color: (opacity = 1) => `rgba(255, 149, 0, ${opacity})`,
+                      barPercentage: 0.5,
+                    }}
+                    style={{ borderRadius: 12, marginHorizontal: 4 }}
+                    showValuesOnTopOfBars
+                    flatColor={true}
+                    fromZero
+                    yAxisLabel=""
+                    yAxisSuffix="%"
+                  />
+                </ScrollView>
               </Card>
             )}
           </View>
@@ -960,7 +1229,7 @@ export default function StatsScreen() {
             </Text>
 
             {hasActivitiesComparisonData && (
-              <Card className="p-4">
+              <Card className="p-4" onLayout={onContainerLayout}>
                 <View
                   style={{
                     flexDirection: "row",
@@ -975,22 +1244,28 @@ export default function StatsScreen() {
                     className="text-primary"
                   />
                   <Text size="lg" className="font-semibold">
-                    Atividades por Frequência (7 dias)
+                    Atividades por Frequência ({activitiesComparisonChartData.labels.length} dias)
                   </Text>
                 </View>
-                <LineChart
-                  data={activitiesComparisonChartData}
-                  width={chartWidth}
-                  height={chartHeight}
-                  chartConfig={chartConfig}
-                  bezier
-                  withVerticalLines={false}
-                  withHorizontalLines={true}
-                  withInnerLines={false}
-                  withOuterLines={false}
-                  style={{ borderRadius: 12 }}
-                  segments={4}
-                />
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  style={{ marginHorizontal: -4 }}
+                >
+                  <LineChart
+                    data={activitiesComparisonChartData}
+                    width={Math.max(chartWidth, 350)} 
+                    height={chartHeight}
+                    chartConfig={chartConfig}
+                    bezier
+                    withVerticalLines={false}
+                    withHorizontalLines={true}
+                    withInnerLines={false}
+                    withOuterLines={false}
+                    style={{ borderRadius: 12, marginHorizontal: 4 }}
+                    segments={4}
+                  />
+                </ScrollView>
                 <View
                   style={{
                     flexDirection: "row",
@@ -1143,8 +1418,31 @@ export default function StatsScreen() {
               </Card>
             ) : (
               habits.map((habit) => {
+                let totalCount = 30; 
+                
+                if (filters.startDate && filters.endDate) {
+                  const start = new Date(filters.startDate);
+                  const end = new Date(filters.endDate);
+                  const daysInPeriod = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                  
+                  switch (habit.frequency) {
+                    case 'daily':
+                      totalCount = daysInPeriod;
+                      break;
+                    case 'weekly':
+                      totalCount = Math.ceil(daysInPeriod / 7);
+                      break;
+                    case 'monthly':
+                      totalCount = Math.ceil(daysInPeriod / 30);
+                      break;
+                  }
+                } else {
+                  totalCount = habit.frequency === 'daily' ? 30 : 
+                               habit.frequency === 'weekly' ? 4 : 
+                               1; 
+                }
+
                 const completedCount = habit.completions?.length || 0;
-                const totalCount = 30;
 
                 return (
                   <HabitDetailCard
@@ -1162,38 +1460,38 @@ export default function StatsScreen() {
       </ScrollView>
 
       <Modal
-  visible={showFilters}
-  animationType="slide"
-  transparent={true}
-  onRequestClose={() => setShowFilters(false)}
->
-  <View className="flex-1 bg-black/80 dark:bg-black/95 justify-end">
-    <View className="bg-white dark:bg-gray-950 rounded-t-2xl p-5 max-h-[85%] min-h-[400px] shadow-xl">
-      <View className="flex-row justify-between items-center mb-5 pb-4 border-b border-gray-200 dark:border-gray-800">
-        <Text size="xl" className="font-bold text-gray-900 dark:text-gray-100">
-          Filtrar Estatísticas
-        </Text>
-        <TouchableOpacity
-          onPress={() => setShowFilters(false)}
-          className="p-1 rounded-full bg-gray-100 dark:bg-gray-800"
-        >
-          <XIcon 
-            size={24} 
-            className="text-gray-600 dark:text-gray-300" 
-          />
-        </TouchableOpacity>
-      </View>
+        visible={showFilters}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowFilters(false)}
+      >
+        <View className="flex-1 bg-black/80 dark:bg-black/95 justify-end">
+          <View className="bg-white dark:bg-gray-950 rounded-t-2xl p-5 max-h-[85%] min-h-[400px] shadow-xl">
+            <View className="flex-row justify-between items-center mb-5 pb-4 border-b border-gray-200 dark:border-gray-800">
+              <Text size="xl" className="font-bold text-gray-900 dark:text-gray-100">
+                Filtrar Estatísticas
+              </Text>
+              <TouchableOpacity
+                onPress={() => setShowFilters(false)}
+                className="p-1 rounded-full bg-gray-100 dark:bg-gray-800"
+              >
+                <XIcon 
+                  size={24} 
+                  className="text-gray-600 dark:text-gray-300" 
+                />
+              </TouchableOpacity>
+            </View>
 
-      <StatsFilters
-        filters={filters}
-        onFiltersChange={handleApplyFilters}
-        tags={allTags}
-        onApply={() => setShowFilters(false)}
-        onClear={handleClearFilters}
-      />
-    </View>
-  </View>
-</Modal>
+            <StatsFilters
+              filters={filters}
+              onFiltersChange={handleApplyFilters}
+              tags={allTags}
+              onApply={() => setShowFilters(false)}
+              onClear={handleClearFilters}
+            />
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }

@@ -48,7 +48,7 @@ export function HabitDetailCard({
         {total > 0 && (
           <View className="border-t border-border pt-2">
             <View className="mb-2 flex-row items-center justify-between">
-              <Text size="sm">Taxa de Conclusão</Text>
+              <Text size="sm">Conclusão</Text>
               <Text size="sm" className="font-semibold">
                 {rate}%
               </Text>
@@ -60,7 +60,7 @@ export function HabitDetailCard({
               />
             </View>
             <Text size="sm" className="mt-1">
-              {completed} de {total} completos
+              Número de vezes em que o Hábito foi concluído: {completed} 
             </Text>
           </View>
         )}
