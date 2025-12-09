@@ -7,34 +7,38 @@ import { Text } from "../ui/text";
 import { formatDate } from "@/lib/date";
 import { VStack } from "../ui/vstack";
 import { Box } from "../ui/box";
+import {getLocalDateString} from "@/lib/utils";
 import React from "react";
 
 interface HabitCardProps {
   habit: Habit;
   onToggleCompletion: (habitId: number) => void;
-  date?: Date | null;
+  date?: Date;
 }
 
 export function HabitCard({ habit, onToggleCompletion, date }: HabitCardProps) {
-  const isCompletedToday = () => {
-    const today = date ? date : new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
 
+
+  const isCompletedToday = () => {
+    console.log("HabitCard: ", habit);
+    // @ts-ignore
+    const targetDate = date ? getLocalDateString(date) : today;
+    console.log("targetDate: ", targetDate);
 
     if (habit.concludedDays && Array.isArray(habit.concludedDays)) {
       // @ts-ignore
-      return habit.concludedDays.includes(today);
+      return habit.concludedDays.includes(targetDate);
     }
-
 
     if (habit.completions && Array.isArray(habit.completions)) {
       return habit.completions.some(completion => {
 
         if (typeof completion === 'object' && completion.date) {
-          return completion.date === today;
+          return completion.date === targetDate;
         }
 
         if (typeof completion === 'string') {
-          return completion === today;
+          return completion === targetDate;
         }
         return false;
       });

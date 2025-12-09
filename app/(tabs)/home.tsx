@@ -53,7 +53,7 @@ export default function HomeScreen() {
     try {
       await markHabitCompletion(
         habitId,
-        new Date().toISOString().split("T")[0],
+        selectedDate,
       );
       await loadFilteredHabits();
     } catch (error) {

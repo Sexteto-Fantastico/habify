@@ -42,16 +42,16 @@ export async function getAllHabits(): Promise<Habit[]> {
 }
 
 export async function getHabits(habitFilter: HabitFilter): Promise<Habit[]> {
-  const response = await api.get(
-    `/habits/${habitFilter.createdDate.toISOString().split("T")[0]}`,
-  );
+  const date = habitFilter.createdDate;
+  const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  console.log(`/habits/${utcDate.toISOString().split("T")[0]}`)
+  const response = await api.get(`/habits/${utcDate.toISOString().split("T")[0]}`)
 
   const dados = response.data?.map( (habit: Habit) => habit.completions?.map((c: HabitCompletion) => ({
     ...c,
     completed: true
   })));
-
-  console.log("Data: ",dados);
+  console.log("response.data: ", response.data);
   return response.data;
 }
 
@@ -71,10 +71,11 @@ export async function deleteHabit(id: number): Promise<void> {}
 
 export async function markHabitCompletion(
   habitId: number,
-  date?: string,
+  date: Date,
 ): Promise<void> {
+  const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   await api.post(`/habits/${habitId}/complete`, {
-    date: date,
+    date: utcDate.toISOString().split("T")[0],
   });
 }
 
