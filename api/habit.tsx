@@ -22,9 +22,13 @@ export async function createHabit(
   return response.data.id;
 }
 
-export async function getAllHabits(): Promise<Habit[]> {
-  const response = await api.get("/habits/all");
-  // console.log(response.data);
+export async function getAllHabits(startDate?: string, endDate?: string): Promise<Habit[]> {
+  const params: Record<string, string> = {};
+  if (startDate) params.startDate = startDate;
+  if (endDate) params.endDate = endDate;
+
+  const response = await api.get("/habits/all", { params });
+  
   var responseMapped = response.data.map((habit: any) => ({
     id: habit.id,
     name: habit.name,

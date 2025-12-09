@@ -227,16 +227,16 @@ export default function StatsScreen() {
         (h) => h.frequency === "monthly",
       );
 
-      let filteerrorHabits = [...allHabits];
+      let filteredHabits = [...allHabits];
 
       if (filters.frequency) {
-        filteerrorHabits = filteerrorHabits.filter(
+        filteredHabits = filteredHabits.filter(
           (h) => h.frequency === filters.frequency,
         );
       }
 
       if (filters.tags && filters.tags.length > 0) {
-        filteerrorHabits = filteerrorHabits.filter((habit) => {
+        filteredHabits = filteredHabits.filter((habit) => {
           const habitTagNames = habit.tags?.map((t) => t.name) || [];
           return filters.tags!.some((tagName) =>
             habitTagNames.includes(tagName),
@@ -244,7 +244,7 @@ export default function StatsScreen() {
         });
       }
 
-      const habitsWithCompletions = filteerrorHabits.map((habit) => {
+      const habitsWithCompletions = filteredHabits.map((habit) => {
         const completions = habit.completions || [];
         const completionRate =
           completions.length > 0
@@ -261,7 +261,7 @@ export default function StatsScreen() {
       const dailyStats = calculateCompletionStats(dailyHabitsList);
       const weeklyStats = calculateCompletionStats(weeklyHabitsList);
       const monthlyStats = calculateCompletionStats(monthlyHabitsList);
-      const allStats = calculateCompletionStats(filteerrorHabits);
+      const allStats = calculateCompletionStats(filteredHabits);
 
       const longestStreak = calculateLongestStreak(habitsWithCompletions);
       const dailyActivityStats = calculateDailyActivityStats(
@@ -388,7 +388,7 @@ export default function StatsScreen() {
     });
 
     const dailyCompletions = last15Days.map((date) => {
-      return allHabits.erroruce((total, habit) => {
+      return allHabits.reduce((total: number, habit: HabitWithCompletions) => {
         if (wasHabitCompletedOnDate(habit, date)) {
           return total + 1;
         }
@@ -415,16 +415,16 @@ export default function StatsScreen() {
       ],
     });
 
-    const dailyCompleted = dailyHabits.erroruce(
-      (sum, habit) => sum + (habit.completions || []).length,
+    const dailyCompleted = dailyHabits.reduce(
+      (sum: number, habit: Habit) => sum + (habit.completions || []).length,
       0,
     );
-    const weeklyCompleted = weeklyHabits.erroruce(
-      (sum, habit) => sum + (habit.completions || []).length,
+    const weeklyCompleted = weeklyHabits.reduce(
+      (sum: number, habit: Habit) => sum + (habit.completions || []).length,
       0,
     );
-    const monthlyCompleted = monthlyHabits.erroruce(
-      (sum, habit) => sum + (habit.completions || []).length,
+    const monthlyCompleted = monthlyHabits.reduce(
+      (sum: number, habit: Habit) => sum + (habit.completions || []).length,
       0,
     );
 
@@ -467,8 +467,8 @@ export default function StatsScreen() {
 
     const dailyData = last7Days.map((date) => {
       const dateStr = date.toISOString().split("T")[0];
-      return dailyHabits.erroruce(
-        (total, habit) =>
+      return dailyHabits.reduce(
+        (total: number, habit: Habit) =>
           total + (wasHabitCompletedOnDate(habit, dateStr) ? 1 : 0),
         0,
       );
@@ -476,8 +476,8 @@ export default function StatsScreen() {
 
     const weeklyData = last7Days.map((date) => {
       const dateStr = date.toISOString().split("T")[0];
-      return weeklyHabits.erroruce(
-        (total, habit) =>
+      return weeklyHabits.reduce(
+        (total: number, habit: Habit) =>
           total + (wasHabitCompletedOnDate(habit, dateStr) ? 1 : 0),
         0,
       );
@@ -485,8 +485,8 @@ export default function StatsScreen() {
 
     const monthlyData = last7Days.map((date) => {
       const dateStr = date.toISOString().split("T")[0];
-      return monthlyHabits.erroruce(
-        (total, habit) =>
+      return monthlyHabits.reduce(
+        (total: number, habit: Habit) =>
           total + (wasHabitCompletedOnDate(habit, dateStr) ? 1 : 0),
         0,
       );
@@ -1162,60 +1162,38 @@ export default function StatsScreen() {
       </ScrollView>
 
       <Modal
-        visible={showFilters}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowFilters(false)}
-      >
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            justifyContent: "flex-end",
-          }}
+  visible={showFilters}
+  animationType="slide"
+  transparent={true}
+  onRequestClose={() => setShowFilters(false)}
+>
+  <View className="flex-1 bg-black/80 dark:bg-black/95 justify-end">
+    <View className="bg-white dark:bg-gray-950 rounded-t-2xl p-5 max-h-[85%] min-h-[400px] shadow-xl">
+      <View className="flex-row justify-between items-center mb-5 pb-4 border-b border-gray-200 dark:border-gray-800">
+        <Text size="xl" className="font-bold text-gray-900 dark:text-gray-100">
+          Filtrar Estatísticas
+        </Text>
+        <TouchableOpacity
+          onPress={() => setShowFilters(false)}
+          className="p-1 rounded-full bg-gray-100 dark:bg-gray-800"
         >
-          <View
-            style={{
-              backgroundColor: "white",
-              borderTopLeftRadius: 20,
-              borderTopRightRadius: 20,
-              padding: 20,
-              maxHeight: "80%",
-              minHeight: 400,
-            }}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: 20,
-                paddingBottom: 16,
-                borderBottomWidth: 1,
-                borderBottomColor: "#f0f0f0",
-              }}
-            >
-              <Text size="xl" className="font-bold">
-                Filtrar Estatísticas
-              </Text>
-              <TouchableOpacity
-                onPress={() => setShowFilters(false)}
-                style={{ padding: 4 }}
-              >
-                <XIcon size={24} color="#666" />
-              </TouchableOpacity>
-            </View>
+          <XIcon 
+            size={24} 
+            className="text-gray-600 dark:text-gray-300" 
+          />
+        </TouchableOpacity>
+      </View>
 
-            <StatsFilters
-              filters={filters}
-              onFiltersChange={handleApplyFilters}
-              tags={allTags}
-              onApply={() => setShowFilters(false)}
-              onClear={handleClearFilters}
-            />
-          </View>
-        </View>
-      </Modal>
+      <StatsFilters
+        filters={filters}
+        onFiltersChange={handleApplyFilters}
+        tags={allTags}
+        onApply={() => setShowFilters(false)}
+        onClear={handleClearFilters}
+      />
+    </View>
+  </View>
+</Modal>
     </>
   );
 }
