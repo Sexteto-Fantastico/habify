@@ -48,14 +48,13 @@ export async function getAllHabits(startDate?: string, endDate?: string): Promis
 export async function getHabits(habitFilter: HabitFilter): Promise<Habit[]> {
   const date = habitFilter.createdDate;
   const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  console.log(`/habits/${utcDate.toISOString().split("T")[0]}`)
   const response = await api.get(`/habits/${utcDate.toISOString().split("T")[0]}`)
 
   const dados = response.data?.map( (habit: Habit) => habit.completions?.map((c: HabitCompletion) => ({
     ...c,
     completed: true
   })));
-  console.log("response.data: ", response.data);
+
   return response.data;
 }
 

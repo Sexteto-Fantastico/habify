@@ -4,7 +4,7 @@ import { Habit } from "@/lib/types";
 import { CheckIcon } from "lucide-react-native";
 import { Pressable, View } from "react-native";
 import { Text } from "../ui/text";
-import { formatDate } from "@/lib/date";
+
 import { VStack } from "../ui/vstack";
 import { Box } from "../ui/box";
 import {getLocalDateString} from "@/lib/utils";
@@ -13,18 +13,12 @@ import React from "react";
 interface HabitCardProps {
   habit: Habit;
   onToggleCompletion: (habitId: number) => void;
-  date?: Date;
+  date: Date;
 }
 
 export function HabitCard({ habit, onToggleCompletion, date }: HabitCardProps) {
-
-
   const isCompletedToday = () => {
-    console.log("HabitCard: ", habit);
-    // @ts-ignore
-    const targetDate = date ?? getLocalDateString(date);
-    console.log("targetDate: ", targetDate);
-
+    const targetDate = getLocalDateString(date);
     if (habit.concludedDays && Array.isArray(habit.concludedDays)) {
       // @ts-ignore
       return habit.concludedDays.includes(targetDate);
@@ -34,6 +28,7 @@ export function HabitCard({ habit, onToggleCompletion, date }: HabitCardProps) {
       return habit.completions.some(completion => {
 
         if (typeof completion === 'object' && completion.date) {
+          // @ts-ignore
           return completion.date === targetDate;
         }
 
@@ -48,7 +43,6 @@ export function HabitCard({ habit, onToggleCompletion, date }: HabitCardProps) {
   };
 
   const isCompleted = isCompletedToday();
-  console.log(isCompleted);
 
   return (
     <Card>
