@@ -2,7 +2,7 @@ import * as React from "react";
 import { Card } from "@/components/ui/card";
 import { HabitCard } from "@/components/habits/HabitCard";
 import { Habit } from "@/lib/types";
-import { ScrollView, Alert } from "react-native";
+import { ScrollView, Alert, RefreshControl } from "react-native";
 import { getAllHabits, getHabits, markHabitCompletion } from "@/api/habit";
 import { Text } from "@/components/ui/text";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -68,55 +68,66 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background-100">
-      <ScrollView showsVerticalScrollIndicator={false} className="pb-32 p-4">
-        <VStack space="sm" className="px-4 pt-4">
-          <Heading size="2xl">Olá, {user?.name || "Fulano"}! 👋</Heading>
-          <Text className="text-typography-500">
-            Bora criar bons hábitos juntos!
-          </Text>
-        </VStack>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        className="p-4"
+        refreshControl={
+          <RefreshControl refreshing={false} onRefresh={loadFilteredHabits} />
+        }
+      >
+        <Box className="pb-32">
+          <VStack space="sm" className="px-4 pt-4">
+            <Heading size="2xl">Olá, {user?.name || "Fulano"}! 👋</Heading>
+            <Text className="text-typography-500">
+              Bora criar bons hábitos juntos!
+            </Text>
+          </VStack>
 
-        <Box className="mt-4">
-          <WeekCalendar
-            selectedDate={selectedDate}
-            onDateSelect={handleDateSelect}
-          />
-        </Box>
-
-        <StatsProgressionDay habits={habits} selectedDate={selectedDate} />
-
-        <Card className="m-1">
-          <Box className="flex-row justify-between items-center mb-4">
-            <Text size="xl">Hábitos</Text>
-            <Button variant="link" onPress={() => router.push("/list-habits")}>
-              <ButtonText>Ver Todos</ButtonText>
-            </Button>
+          <Box className="mt-4">
+            <WeekCalendar
+              selectedDate={selectedDate}
+              onDateSelect={handleDateSelect}
+            />
           </Box>
-          {habits.length === 0 ? (
-            <Card>
-              <Text className="text-center text-typography-500">
-                Nenhum hábito criado para o dia.
-              </Text>
+
+          <StatsProgressionDay habits={habits} selectedDate={selectedDate} />
+
+          <Card className="m-1">
+            <Box className="flex-row justify-between items-center mb-4">
+              <Text size="xl">Hábitos</Text>
               <Button
                 variant="link"
-                onPress={() => router.push("/create-habit")}
+                onPress={() => router.push("/list-habits")}
               >
-                <ButtonText>Crie um novo hábito!</ButtonText>
+                <ButtonText>Ver Todos</ButtonText>
               </Button>
-            </Card>
-          ) : (
-            <VStack space="sm">
-              {habits.map((habit) => (
-                <HabitCard
-                  key={habit.id}
-                  habit={habit}
-                  onToggleCompletion={handleToggleCompletion}
-                  date={selectedDate}
+            </Box>
+            {habits.length === 0 ? (
+              <Box className="rounded-md border border-dashed border-outline-100 p-4">
+                <Text className="text-center text-typography-500">
+                  Nenhum hábito criado para o dia.
+                </Text>
+                <Button
+                  variant="link"
+                  onPress={() => router.push("/create-habit")}
+                >
+                  <ButtonText>Crie um novo hábito!</ButtonText>
+                </Button>
+              </Box>
+            ) : (
+              <VStack space="sm">
+                {habits.map((habit) => (
+                  <HabitCard
+                    key={habit.id}
+                    habit={habit}
+                    onToggleCompletion={handleToggleCompletion}
+                    date={selectedDate}
                 />
-              ))}
-            </VStack>
-          )}
-        </Card>
+                ))}
+              </VStack>
+            )}
+          </Card>
+        </Box>
       </ScrollView>
     </SafeAreaView>
   );

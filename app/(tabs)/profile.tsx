@@ -62,7 +62,7 @@ export default function ProfilePage() {
       >
         <VStack space="lg" className="px-4 pt-4">
           <Heading size="2xl">Seu Perfil</Heading>
-          <HStack space="3xl" className="items-center">
+          <HStack space="3xl" className="items-center mt-4">
             <Avatar size="lg">
               <AvatarFallbackText>{user?.name}</AvatarFallbackText>
               <AvatarImage source={user?.avatar || user?.name.charAt(0)} />
@@ -126,13 +126,6 @@ export default function ProfilePage() {
               <Button variant="outline" action="secondary" onPress={signOut}>
                 <ButtonIcon as={LogOutIcon} />
                 <ButtonText>Sair da Conta</ButtonText>
-              </Button>
-            </Box>
-
-            <Box className="flex-1">
-              <Button action="negative" onPress={() => setDeleteOpen(true)}>
-                <ButtonIcon as={Trash2Icon} />
-                <ButtonText>Deletar Conta</ButtonText>
               </Button>
             </Box>
           </Box>

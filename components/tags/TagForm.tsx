@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button, ButtonText } from "@/components/ui/button";
 import { Input, InputField } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { TAGS_COLORS } from "@/constants/colors";
@@ -47,7 +47,7 @@ export function TagForm({
                 onPress={() => onChange({ ...formData, color })}
                 className={`h-8 w-8 rounded-full border-2 ${
                   formData.color === color
-                    ? "border-foreground"
+                    ? "border-typography-900"
                     : "border-transparent"
                 }`}
                 style={{ backgroundColor: color }}
@@ -57,10 +57,10 @@ export function TagForm({
         </View>
         <View className="flex-row gap-2 pb-4">
           <Button variant="outline" onPress={onCancel} className="flex-1">
-            <Text>Cancelar</Text>
+            <ButtonText>Cancelar</ButtonText>
           </Button>
           <Button onPress={onSubmit} className="flex-1">
-            <Text>{editingTag ? "Salvar" : "Criar"}</Text>
+            <ButtonText>{editingTag ? "Salvar" : "Criar"}</ButtonText>
           </Button>
         </View>
       </Card>

@@ -17,10 +17,15 @@ const StatsProgressionDay = ({
   const isHabitCompletedForDate = (habit: Habit, targetDate: Date): boolean => {
     const targetDateString = targetDate.toISOString().split("T")[0];
 
-    const completion = habit.completions.find((comp) => {
-      const compDateString = new Date(comp.date).toISOString().split("T")[0];
-      return compDateString === targetDateString && comp.completed;
-    });
+    const completion =
+      habit.completions.find((comp) => {
+        const compDateString = new Date(comp.date).toISOString().split("T")[0];
+        return compDateString === targetDateString && comp.completed;
+      }) ||
+      habit.concludedDays?.find((date) => {
+        const compDateString = new Date(date).toISOString().split("T")[0];
+        return compDateString === targetDateString;
+      });
 
     return !!completion;
   };
@@ -52,7 +57,7 @@ const StatsProgressionDay = ({
 
       <Text className="text-success-500 text-sm mt-2 font-medium">
         {progress === 100
-          ? "Todos os hábitos concluídos! "
+          ? "Todos os hábitos foram concluídos!"
           : `${Math.round(progress)}% concluído`}
       </Text>
     </Card>

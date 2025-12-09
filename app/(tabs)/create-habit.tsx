@@ -3,7 +3,13 @@ import { Icon } from "@/components/ui/icon";
 import { ArrowLeftIcon } from "lucide-react-native";
 import { Stack, useRouter } from "expo-router";
 import * as React from "react";
-import { View, ScrollView, Alert } from "react-native";
+import {
+  View,
+  ScrollView,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { getAllTags } from "@/api/tag";
 import { createHabit } from "@/api/habit";
 import { HabitForm, HabitFormData } from "@/components/habits/HabitForm";
@@ -66,24 +72,29 @@ export default function CreateHabitScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background-100">
-      <ScrollView className="pb-32 p-4">
-        <VStack space="sm" className="px-4 py-4">
-          <Heading size="2xl">Criar Hábito</Heading>
-          <Text className="text-typography-500">
-            Crie novos hábitos para uma vida mais saudável!
-          </Text>
-        </VStack>
-        <View className="gap-6">
-          <HabitForm
-            formData={formData}
-            onChange={setFormData}
-            onSubmit={handleSubmit}
-            onCancel={handleCancel}
-            submitLabel="Criar"
-            tags={tags}
-          />
-        </View>
-      </ScrollView>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView className="pb-32 p-4">
+          <VStack space="sm" className="px-4 py-4">
+            <Heading size="2xl">Criar Hábito</Heading>
+            <Text className="text-typography-500">
+              Crie novos hábitos para uma vida mais saudável!
+            </Text>
+          </VStack>
+          <View className="gap-6">
+            <HabitForm
+              formData={formData}
+              onChange={setFormData}
+              onSubmit={handleSubmit}
+              onCancel={handleCancel}
+              submitLabel="Criar"
+              tags={tags}
+            />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

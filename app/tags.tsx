@@ -1,4 +1,4 @@
-import { Button, ButtonText } from "@/components/ui/button";
+import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
@@ -183,14 +183,15 @@ export default function TagsScreen() {
                           variant="outline"
                           onPress={() => startEditing(tag)}
                         >
-                          <Icon as={EditIcon} size="sm" />
+                          <ButtonIcon as={EditIcon} size="sm" />
                         </Button>
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="solid"
+                          action="negative"
                           onPress={() => handleDeleteTag(tag)}
                         >
-                          <Icon as={TrashIcon} size="sm" />
+                          <ButtonIcon as={TrashIcon} size="sm" />
                         </Button>
                       </View>
                     </View>

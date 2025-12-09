@@ -6,12 +6,12 @@ import { useRouter } from "expo-router";
 import { Pressable } from "../ui/pressable";
 import { Box } from "../ui/box";
 import { cn } from "@/lib/utils";
+import { HStack } from "../ui/hstack";
 
 interface TagSelectorProps {
   tags: Tag[];
   selectedTagIds: number[];
   onToggle: (tagId: number) => void;
-  showManageButton?: boolean;
 }
 
 export function TagSelector({
@@ -23,10 +23,12 @@ export function TagSelector({
 
   if (tags.length === 0) {
     return (
-      <Box className="rounded-md border border-dashed border-border p-4">
-        <Text className="text-center">Nenhuma tag disponível</Text>
+      <Box className="rounded-md border border-dashed border-outline-100 p-4">
+        <Text size="sm" className="text-center text-typography-500">
+          Nenhuma tag disponível
+        </Text>
         <Button variant="link" size="sm" onPress={() => router.push("/tags")}>
-          <ButtonText size="sm">Crie sua primeira</ButtonText>
+          <ButtonText>Crie sua primeira</ButtonText>
         </Button>
       </Box>
     );
@@ -35,7 +37,7 @@ export function TagSelector({
   return (
     <Box>
       <Box className="flex-row items-center justify-between">
-        <Text size="sm">Tags</Text>
+        <Text>Tags</Text>
         <Button variant="link" size="sm" onPress={() => router.push("/tags")}>
           <ButtonText size="sm">Gerenciar tags</ButtonText>
         </Button>
@@ -47,18 +49,21 @@ export function TagSelector({
             <Pressable
               key={tag.id}
               onPress={() => onToggle(tag.id)}
-              className={cn(
-                "rounded-full border-2 px-3 py-1.5",
-                isSelected ? "border-primary-500" : "border-border",
-              )}
+              className={`rounded-full border-2 px-3 py-1.5 ${
+                isSelected
+                  ? "border-primary-500 bg-primary-50"
+                  : "border-outline-300 bg-background-0"
+              }`}
             >
-              <Box className="flex-row items-center gap-2">
+              <HStack space="xs" className="items-center">
                 <Box
                   className="h-3 w-3 rounded-full"
                   style={{ backgroundColor: tag.color }}
                 />
-                <Text size="sm">{tag.name}</Text>
-              </Box>
+                <Text size="sm" className="text-typography-900">
+                  {tag.name}
+                </Text>
+              </HStack>
             </Pressable>
           );
         })}

@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonText } from "@/components/ui/button";
 import { Input, InputField } from "@/components/ui/input";
 import { TagSelector } from "@/components/tags/TagSelector";
 import { HabitFrequency, Tag } from "@/lib/types";
@@ -67,17 +67,18 @@ export function HabitForm({
         </View>
 
         <View className="gap-2">
-          <Text size="sm">Frequência</Text>
+          <Text>Frequência</Text>
           <View className="flex-row gap-2">
             {(["daily", "weekly", "monthly"] as HabitFrequency[]).map(
               (freq) => (
                 <Button
                   key={freq}
                   variant={formData.frequency === freq ? "solid" : "outline"}
+                  action="primary"
                   onPress={() => onChange({ ...formData, frequency: freq })}
                   className="flex-1"
                 >
-                  <Text>{FREQUENCY_LABELS[freq]}</Text>
+                  <ButtonText>{FREQUENCY_LABELS[freq]}</ButtonText>
                 </Button>
               ),
             )}
@@ -96,11 +97,16 @@ export function HabitForm({
         />
 
         <View className="flex-row gap-2 pb-4">
-          <Button variant="outline" onPress={onCancel} className="flex-1">
-            <Text>Cancelar</Text>
+          <Button
+            variant="outline"
+            action="secondary"
+            onPress={onCancel}
+            className="flex-1"
+          >
+            <ButtonText>Cancelar</ButtonText>
           </Button>
           <Button onPress={onSubmit} className="flex-1">
-            <Text>{submitLabel}</Text>
+            <ButtonText>{submitLabel}</ButtonText>
           </Button>
         </View>
       </Card>

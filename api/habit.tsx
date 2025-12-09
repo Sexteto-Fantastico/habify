@@ -22,13 +22,16 @@ export async function createHabit(
   return response.data.id;
 }
 
-export async function getAllHabits(startDate?: string, endDate?: string): Promise<Habit[]> {
+export async function getAllHabits(
+  startDate?: string,
+  endDate?: string,
+): Promise<Habit[]> {
   const params: Record<string, string> = {};
   if (startDate) params.startDate = startDate;
   if (endDate) params.endDate = endDate;
 
   const response = await api.get("/habits/all", { params });
-  
+
   var responseMapped = response.data.map((habit: any) => ({
     id: habit.id,
     name: habit.name,
@@ -39,7 +42,10 @@ export async function getAllHabits(startDate?: string, endDate?: string): Promis
       ...tag,
       color: tag.color ?? "blue",
     })),
-    completions: habit.completions ?? [],
+    completions: (habit.completions ?? []).map((completion: any) => ({
+      ...completion,
+      date: completion.date ? new Date(completion.date) : completion.date,
+    })),
   }));
 
   return responseMapped;
@@ -47,71 +53,23 @@ export async function getAllHabits(startDate?: string, endDate?: string): Promis
 
 export async function getHabits(habitFilter: HabitFilter): Promise<Habit[]> {
   const date = habitFilter.createdDate;
-  const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const response = await api.get(`/habits/${utcDate.toISOString().split("T")[0]}`)
-
-  const dados = response.data?.map( (habit: Habit) => habit.completions?.map((c: HabitCompletion) => ({
-    ...c,
-    completed: true
-  })));
-
+  const utcDate = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+  );
+  const response = await api.get(
+    `/habits/${utcDate.toISOString().split("T")[0]}`,
+  );
   return response.data;
 }
-
-export async function getHabitById(id: number): Promise<Habit | null> {
-  return null;
-}
-
-export async function updateHabit(
-  id: number,
-  name: string,
-  description: string,
-  frequency: HabitFrequency,
-  tags: number[] = [],
-): Promise<void> {}
-
-export async function deleteHabit(id: number): Promise<void> {}
 
 export async function markHabitCompletion(
   habitId: number,
   date: Date,
 ): Promise<void> {
-  const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const utcDate = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+  );
   await api.post(`/habits/${habitId}/complete`, {
     date: utcDate.toISOString().split("T")[0],
   });
 }
-
-export async function getHabitCompletions(
-  habitId: number,
-  startDate?: string,
-  endDate?: string,
-): Promise<HabitCompletion[]> {
-  return [];
-}
-
-export async function getHabitsWithCompletions(
-  startDate?: string,
-  endDate?: string,
-): Promise<Array<Habit>> {
-  return [];
-}
-
-export async function addTagToHabit(
-  habitId: number,
-  tagId: number,
-): Promise<void> {}
-
-export async function removeTagFromHabit(
-  habitId: number,
-  tagId: number,
-): Promise<void> {}
-
-export async function getHabitTags(habitId: number): Promise<Tag[]> {
-  return [];
-}
-
-export async function setHabitTags(
-  habitId: number,
-  tagIds: number[],
-): Promise<void> {}
