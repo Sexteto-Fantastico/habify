@@ -18,7 +18,7 @@ export async function createHabit(
 
 export async function getAllHabits(): Promise<Habit[]> {
   const response = await api.get("/habits/all");
-  console.log(response.data);
+  // console.log(response.data);
   var responseMapped = response.data.map((habit: any) => ({
     id: habit.id,
     name: habit.name,
@@ -39,6 +39,13 @@ export async function getHabits(habitFilter: HabitFilter): Promise<Habit[]> {
   const response = await api.get(
     `/habits/${habitFilter.createdDate.toISOString().split("T")[0]}`,
   );
+
+  const dados = response.data?.map( (habit: Habit) => habit.completions?.map((c: HabitCompletion) => ({
+    ...c,
+    completed: true
+  })));
+
+  console.log("Data: ",dados);
   return response.data;
 }
 

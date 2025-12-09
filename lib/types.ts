@@ -23,6 +23,7 @@ export interface Habit {
   frequency: HabitFrequency;
   tags: Tag[];
   completions: HabitCompletion[];
+  concludedDays?: [];
 }
 
 export interface HabitCompletion {
