@@ -1,25 +1,18 @@
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
-import { View } from "react-native";
+import { Box } from "../ui/box";
+import { Grid, GridItem } from "../ui/grid";
 
 interface StatsCardProps {
-  title: string;
-  description?: string;
   stats: {
     total: number;
     completed: number;
     pending: number;
     notCompleted: number;
   };
-  showCompletionRate?: boolean;
 }
 
-export function StatsCard({
-  title,
-  description,
-  stats,
-  showCompletionRate = false,
-}: StatsCardProps) {
+export function StatsCard({ stats }: StatsCardProps) {
   const getStatusColor = (status: "completed" | "pending" | "notCompleted") => {
     switch (status) {
       case "completed":
@@ -34,48 +27,33 @@ export function StatsCard({
   };
 
   return (
-    <View>
-      <Text>{title}</Text>
-      <Text>{description}</Text>
-
-      <View className="mt-4 grid grid-cols-2 gap-4">
-        <Card className="flex-row flex-wrap justify-between">
-          <View className="p-4">
-            <Text>Total</Text>
-            <Text className="text-2xl font-bold">{stats.total}</Text>
-          </View>
-          <View className="p-4">
-            <Text>Completos</Text>
-            <Text
-              className={`text-2xl font-bold ${getStatusColor("completed")}`}
-            >
-              {stats.completed}
-            </Text>
-          </View>
-          <View className="p-4">
-            <Text>Pendentes</Text>
-            <Text className={`text-2xl font-bold ${getStatusColor("pending")}`}>
-              {stats.pending}
-            </Text>
-          </View>
-          <View className="p-4">
-            <Text>Incompletos</Text>
-            <Text
-              className={`text-2xl font-bold ${getStatusColor("notCompleted")}`}
-            >
-              {stats.notCompleted}
-            </Text>
-          </View>
-        </Card>
-      </View>
-      {showCompletionRate && stats.total > 0 && (
-        <View className="mt-4 border-t border-border pt-4">
-          <Text className="text-muted-foreground">
-            Taxa de Conclusão:{" "}
-            {Math.round((stats.completed / stats.total) * 100)}%
+    <Card>
+      <Grid _extra={{ className: "grid-cols-2 gap-4" }}>
+        <GridItem _extra={{ className: "col-span-1" }}>
+          <Text>Total</Text>
+          <Text className="text-2xl font-bold">{stats.total}</Text>
+        </GridItem>
+        <GridItem _extra={{ className: "col-span-1" }}>
+          <Text>Completos</Text>
+          <Text className={`text-2xl font-bold ${getStatusColor("completed")}`}>
+            {stats.completed}
           </Text>
-        </View>
-      )}
-    </View>
+        </GridItem>
+        <GridItem _extra={{ className: "col-span-1" }}>
+          <Text>Pendentes</Text>
+          <Text className={`text-2xl font-bold ${getStatusColor("pending")}`}>
+            {stats.pending}
+          </Text>
+        </GridItem>
+        <GridItem _extra={{ className: "col-span-1" }}>
+          <Text>Incompletos</Text>
+          <Text
+            className={`text-2xl font-bold ${getStatusColor("notCompleted")}`}
+          >
+            {stats.notCompleted}
+          </Text>
+        </GridItem>
+      </Grid>
+    </Card>
   );
 }

@@ -2,7 +2,7 @@ import axios, {
   AxiosInstance,
   AxiosResponse,
   InternalAxiosRequestConfig,
-  AxiosError
+  AxiosError,
 } from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as NavigationService from "@/app/auth/navigation";
@@ -11,12 +11,13 @@ import Constants from "expo-constants";
 
 const debuggerHost = Constants.expoConfig?.hostUri;
 const localhost = debuggerHost?.split(":")[0];
+let API_BASE_URL = '';
+
+API_BASE_URL = `http://${localhost}:3001/api`;
 
 if (!localhost) {
-  throw new Error("Localhost IP não encontrado. Verifique se está rodando no Expo Go.");
+  API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3001/api';
 }
-
-const API_BASE_URL = `http://${localhost}:3001/api`;
 
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -30,15 +31,15 @@ api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
       const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
-      
+
       if (jsonValue && config.headers) {
         const userData = JSON.parse(jsonValue);
-        
-        const token = userData?.token; 
+
+        const token = userData?.token;
 
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
-          console.log("Token anexado ao header com sucesso"); 
+          console.log("Token anexado ao header com sucesso");
         }
       }
     } catch (error) {
@@ -61,13 +62,13 @@ api.interceptors.response.use(
     if (error.response) {
       const { data, status } = error.response;
 
-      if (data && typeof data === 'object') {
-        if ('error' in data) {
+      if (data && typeof data === "object") {
+        if ("error" in data) {
           txtMensagem = (data as any).error;
-        } else if ('message' in data) {
+        } else if ("message" in data) {
           txtMensagem = (data as any).message;
         }
-      } else if (typeof data === 'string') {
+      } else if (typeof data === "string") {
         txtMensagem = data;
       }
 
@@ -75,8 +76,10 @@ api.interceptors.response.use(
         try {
           await AsyncStorage.removeItem(STORAGE_KEY);
           NavigationService.resetToLogin();
-          
-          return Promise.reject(new Error("Sessão expirada. Faça login novamente."));
+
+          return Promise.reject(
+            new Error("Sessão expirada. Faça login novamente."),
+          );
         } catch (logoutError) {
           console.log("Erro ao limpar dados de sessão", logoutError);
         }

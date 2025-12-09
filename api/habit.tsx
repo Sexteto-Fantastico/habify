@@ -13,7 +13,13 @@ export async function createHabit(
   frequency: HabitFrequency,
   tags: string[] = [],
 ): Promise<number> {
-  return 1;
+  const response = await api.post("/habits", {
+    name,
+    description,
+    frequency,
+    tags,
+  });
+  return response.data.id;
 }
 
 export async function getAllHabits(): Promise<Habit[]> {
