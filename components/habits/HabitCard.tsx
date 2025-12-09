@@ -22,7 +22,7 @@ export function HabitCard({ habit, onToggleCompletion, date }: HabitCardProps) {
   const isCompletedToday = () => {
     console.log("HabitCard: ", habit);
     // @ts-ignore
-    const targetDate = date ? getLocalDateString(date) : today;
+    const targetDate = date ?? getLocalDateString(date);
     console.log("targetDate: ", targetDate);
 
     if (habit.concludedDays && Array.isArray(habit.concludedDays)) {
